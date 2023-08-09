@@ -4,6 +4,16 @@ from copy import deepcopy
 from time import time
 from typing import Optional, Union
 
+# =====================================================================================================================
+# JULIA
+import julia
+julia.install("/home/icarrara/Documents/Programm/Julia/bin/julia")
+julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compiled_modules=False)
+from julia import Pkg
+Pkg.activate("/home/icarrara/Documents/Project/moabb/Takens_2")
+from julia import Takens_2
+from moabb.pipelines.features import AugmentedDataset
+
 import joblib
 import numpy as np
 from joblib import Parallel, delayed
@@ -145,25 +155,33 @@ class WithinSessionEvaluation(BaseEvaluation):
         # Load result if the folder exists
         if param_grid is not None and not os.path.isdir(name_grid):
             if name in param_grid:
-                search = GridSearchCV(
-                    grid_clf,
-                    param_grid[name],
-                    refit=True,
-                    cv=cv,
-                    n_jobs=self.n_jobs,
-                    scoring=self.paradigm.scoring,
-                    return_train_score=True,
-                )
-                search.fit(X_, y_)
-                grid_clf.set_params(**search.best_params_)
+                alter_grid = deepcopy(grid_clf)
 
-                # Save the result
-                os.makedirs(name_grid, exist_ok=True)
-                joblib.dump(
-                    search,
-                    os.path.join(name_grid, "Grid_Search_WithinSession.pkl"),
-                )
-                del search
+                if alter_grid.steps[-1][0] == "SPDNet":
+                    order, lag = Takens_2.takens(X_)
+                    alter_grid.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                    grid_clf = alter_grid
+
+                else:
+                    search = GridSearchCV(
+                        alter_grid,
+                        param_grid[name],
+                        refit=True,
+                        cv=cv,
+                        n_jobs=self.n_jobs,
+                        scoring=self.paradigm.scoring,
+                        return_train_score=True,
+                    )
+                    search.fit(X_, y_)
+                    grid_clf.set_params(**search.best_params_)
+
+                    # Save the result
+                    os.makedirs(name_grid, exist_ok=True)
+                    joblib.dump(
+                        search,
+                        os.path.join(name_grid, "Grid_Search_WithinSession.pkl"),
+                    )
+                    del search
                 return grid_clf
 
             else:
@@ -493,25 +511,33 @@ class CrossSessionEvaluation(BaseEvaluation):
     def _grid_search(self, param_grid, name_grid, name, grid_clf, X, y, cv, groups):
         if param_grid is not None and not os.path.isdir(name_grid):
             if name in param_grid:
-                search = GridSearchCV(
-                    grid_clf,
-                    param_grid[name],
-                    refit=True,
-                    cv=cv,
-                    n_jobs=self.n_jobs,
-                    scoring=self.paradigm.scoring,
-                    return_train_score=True,
-                )
-                search.fit(X, y, groups=groups)
-                grid_clf.set_params(**search.best_params_)
+                alter_grid = deepcopy(grid_clf)
 
-                # Save the result
-                os.makedirs(name_grid, exist_ok=True)
-                joblib.dump(
-                    search,
-                    os.path.join(name_grid, "Grid_Search_CrossSession.pkl"),
-                )
-                del search
+                if alter_grid.steps[-1][0] == "SPDNet":
+                    order, lag = Takens_2.takens(X)
+                    alter_grid.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                    grid_clf = alter_grid
+
+                else:
+                    search = GridSearchCV(
+                        grid_clf,
+                        param_grid[name],
+                        refit=False,
+                        cv=cv,
+                        n_jobs=self.n_jobs,
+                        scoring=self.paradigm.scoring,
+                        return_train_score=True,
+                    )
+                    search.fit(X, y, groups=groups)
+                    grid_clf.set_params(**search.best_params_)
+
+                    # Save the result
+                    os.makedirs(name_grid, exist_ok=True)
+                    joblib.dump(
+                        search,
+                        os.path.join(name_grid, "Grid_Search_CrossSession.pkl"),
+                    )
+                    del search
                 return grid_clf
 
             else:
@@ -712,7 +738,7 @@ class CrossSubjectEvaluation(BaseEvaluation):
                 search = GridSearchCV(
                     clf,
                     param_grid[name],
-                    refit=True,
+                    refit=False,
                     cv=cv,
                     n_jobs=self.n_jobs,
                     scoring=self.paradigm.scoring,
