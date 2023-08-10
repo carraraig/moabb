@@ -12,7 +12,7 @@ from moabb.analysis import analyze
 from moabb.evaluations import (
     CrossSessionEvaluation,
     CrossSubjectEvaluation,
-    WithinSessionEvaluation,
+    WithinSessionEvaluation
 )
 from moabb.pipelines.utils import (
     generate_paradigms,
@@ -112,10 +112,11 @@ def benchmark(  # noqa: C901
     """
     # set logs
     if evaluations is None:
-        evaluations = ["WithinSession", "CrossSession", "CrossSubject"]
+        evaluations = ["WithinSession", "WithinSession_Nested", "CrossSession", "CrossSubject"]
 
     eval_type = {
         "WithinSession": WithinSessionEvaluation,
+        "WithinSession_Nested": WithinSessionEvaluation_Nested,
         "CrossSession": CrossSessionEvaluation,
         "CrossSubject": CrossSubjectEvaluation,
     }
