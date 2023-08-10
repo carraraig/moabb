@@ -10,7 +10,7 @@ import julia
 julia.install("/home/icarrara/Documents/Programm/Julia/bin/julia")
 julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compiled_modules=False)
 from julia import Pkg
-Pkg.activate("/home/icarrara/Documents/Project/moabb/Takens_2")
+Pkg.activate("/home/icarrara/Documents/Project/HolographicEEG_NEW/Takens_2")
 from julia import Takens_2
 from moabb.pipelines.features import AugmentedDataset
 
