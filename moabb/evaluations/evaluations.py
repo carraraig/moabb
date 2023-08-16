@@ -151,7 +151,7 @@ class WithinSessionEvaluation(BaseEvaluation):
         if param_grid is not None and not os.path.isdir(name_grid):
             if name in param_grid:
                 alter_grid = deepcopy(grid_clf)
-                if alter_grid.steps[-1][0] == "SPDNet":
+                if alter_grid.steps[-1][0] == "SPDNet" or alter_grid.steps[-1][0] == "TMDM":
                     order, lag = Takens_2.takens(X_)
                     alter_grid.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                     grid_clf = alter_grid
