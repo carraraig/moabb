@@ -272,12 +272,15 @@ class WithinSessionEvaluation(BaseEvaluation):
                             X[ix],
                             y_cv,
                             cv=cv,
-                            scoring=self.paradigm.scoring,
+                            scoring=[self.paradigm.scoring, 'precision', 'recall', 'f1'],
                             n_jobs=self.n_jobs,
                             error_score=self.error_score,
                             return_estimator=True,
                         )
-                        score = results["test_score"].mean()
+                        score = results["test_roc_auc"].mean()
+                        score_precision = results["test_precision"].mean()
+                        score_recall = results["test_recall"].mean()
+                        score_f1 = results["test_f1"].mean()
                         if self.hdf5_path is not None:
                             save_model_list(
                                 results["estimator"],
@@ -297,6 +300,9 @@ class WithinSessionEvaluation(BaseEvaluation):
                         "subject": subject,
                         "session": session,
                         "score": score,
+                        "score_precision": score_precision,
+                        "score_recall": score_recall,
+                        "score_f1": score_f1,
                         "n_samples": len(y_cv),  # not training sample
                         "n_channels": nchan,
                         "pipeline": name,

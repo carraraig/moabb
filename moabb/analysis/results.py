@@ -125,12 +125,12 @@ class Results:
             else:
                 return res
 
-        col_names = ["score", "time", "samples"]
+        col_names = ["score", "score_precision", "score_recall", "score_f1", "time", "samples"]
         if _carbonfootprint:
-            n_cols = 4
+            n_cols = 7
             col_names.append("carbon_emission")
         else:
-            n_cols = 3
+            n_cols = 6
 
         with h5py.File(self.filepath, "r+") as f:
             for name, data_dict in results.items():
@@ -180,7 +180,12 @@ class Results:
                             f"were specified in the evaluation, but results"
                             f" contain only these keys: {d.keys()}."
                         ) from None
-                    cols = [d["score"], d["time"], d["n_samples"]]
+                    cols = [d["score"],
+                            d["score_precision"],
+                            d["score_recall"],
+                            d["score_f1"],
+                            d["time"],
+                            d["n_samples"]]
                     if _carbonfootprint:
                         if isinstance(d["carbon_emission"], tuple):
                             cols.append(*d["carbon_emission"])
