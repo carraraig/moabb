@@ -146,37 +146,51 @@ class WithinSessionEvaluation(BaseEvaluation):
             # Perform default within session evaluation
             super().__init__(**kwargs)
 
-    def _grid_search(self, param_grid, name_grid, name, grid_clf, X_, y_, cv):
+    def _grid_search(self, param_grid, name_grid, name, grid_clf, X_, y_, cv, nested):
         # Load result if the folder exists
         if param_grid is not None and not os.path.isdir(name_grid):
             if name in param_grid:
                 alter_grid = deepcopy(grid_clf)
-                if alter_grid.steps[-1][0] == "SPDNet" or alter_grid.steps[-1][0] == "TMDM":
+                if alter_grid.steps[-1][0] == "SPDNet" or \
+                        alter_grid.steps[-1][0] == "TMDM":
                     order, lag = Takens_2.takens(X_)
                     alter_grid.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                     grid_clf = alter_grid
+                    return grid_clf
                 else:
-                    search = GridSearchCV(
-                        grid_clf,
-                        param_grid[name],
-                        refit=True,
-                        cv=cv,
-                        n_jobs=self.n_jobs,
-                        scoring=self.paradigm.scoring,
-                        return_train_score=True,
-                    )
-                    search.fit(X_, y_)
-                    grid_clf.set_params(**search.best_params_)
+                    if nested:
+                        inner_cv = StratifiedKFold(3, shuffle=True, random_state=self.random_state)
+                        search = GridSearchCV(
+                            grid_clf,
+                            param_grid[name],
+                            refit=True,
+                            cv=inner_cv,
+                            n_jobs=self.n_jobs,
+                            scoring=self.paradigm.scoring,
+                            return_train_score=True,
+                        )
+                        return search
+                    else:
+                        search = GridSearchCV(
+                            grid_clf,
+                            param_grid[name],
+                            refit=True,
+                            cv=cv,
+                            n_jobs=self.n_jobs,
+                            scoring=self.paradigm.scoring,
+                            return_train_score=True,
+                        )
+                        search.fit(X_, y_)
+                        grid_clf.set_params(**search.best_params_)
 
-                    # Save the result
-                    os.makedirs(name_grid, exist_ok=True)
-                    joblib.dump(
-                        search,
-                        os.path.join(name_grid, "Grid_Search_WithinSession.pkl"),
-                    )
-                    del search
-                return grid_clf
-
+                        # Save the result
+                        os.makedirs(name_grid, exist_ok=True)
+                        joblib.dump(
+                            search,
+                            os.path.join(name_grid, "Grid_Search_WithinSession.pkl"),
+                        )
+                        del search
+                        return grid_clf
             else:
                 return grid_clf
 
@@ -189,7 +203,7 @@ class WithinSessionEvaluation(BaseEvaluation):
             return grid_clf
 
     # flake8: noqa: C901
-    def _evaluate(self, dataset, pipelines, param_grid):
+    def _evaluate(self, dataset, pipelines, param_grid, nested):
         # Progress Bar at subject level
         for subject in tqdm(dataset.subject_list, desc=f"{dataset.code}-WithinSession"):
             # check if we already have result for this subject/pipeline
@@ -235,7 +249,7 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                     # Implement Grid Search
                     grid_clf = self._grid_search(
-                        param_grid, name_grid, name, grid_clf, X_, y_, cv
+                        param_grid, name_grid, name, grid_clf, X_, y_, cv, nested=nested
                     )
 
                     if self.hdf5_path is not None:
@@ -284,7 +298,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                         if self.hdf5_path is not None:
                             save_model_list(
                                 results["estimator"],
-                                score_list=results["test_score"],
+                                score_list=results["test_roc_auc"], #["test_score"],
                                 save_path=model_save_path,
                             )
                     if _carbonfootprint:
@@ -444,11 +458,11 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 )
                             yield res
 
-    def evaluate(self, dataset, pipelines, param_grid):
+    def evaluate(self, dataset, pipelines, param_grid, nested):
         if self.calculate_learning_curve:
             yield from self._evaluate_learning_curve(dataset, pipelines)
         else:
-            yield from self._evaluate(dataset, pipelines, param_grid)
+            yield from self._evaluate(dataset, pipelines, param_grid, nested)
 
     def is_valid(self, dataset):
         return True
