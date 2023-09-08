@@ -1,0 +1,9 @@
+name = "Takens"
+uuid = "aacf7a67-c2ba-4351-90d6-d86b3edea413"
+authors = ["CARRARA Igor <igor.carrara@inria.fr>"]
+version = "0.1.0"
+
+[deps]
+DelayEmbeddings = "5732040d-69e3-5649-938a-b6b4f237613f"
+Peaks = "18e31ff7-3703-566c-8e60-38913d67486b"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"

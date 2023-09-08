@@ -10,8 +10,8 @@ import julia
 julia.install("/home/icarrara/Documents/Programm/Julia/bin/julia")
 julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compiled_modules=False)
 from julia import Pkg
-Pkg.activate("/home/icarrara/Documents/Project/HolographicEEG_NEW/Takens_2")
-from julia import Takens_2
+Pkg.activate("/home/icarrara/Documents/Project/moabb/Takens")
+from julia import Takens
 from moabb.pipelines.features import AugmentedDataset
 
 import joblib
@@ -150,47 +150,39 @@ class WithinSessionEvaluation(BaseEvaluation):
         # Load result if the folder exists
         if param_grid is not None and not os.path.isdir(name_grid):
             if name in param_grid:
-                alter_grid = deepcopy(grid_clf)
-                if alter_grid.steps[-1][0] == "SPDNet" or \
-                        alter_grid.steps[-1][0] == "TMDM":
-                    order, lag = Takens_2.takens(X_)
-                    alter_grid.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
-                    grid_clf = alter_grid
-                    return grid_clf
+                if nested:
+                    inner_cv = StratifiedKFold(3, shuffle=True, random_state=self.random_state)
+                    search = GridSearchCV(
+                        grid_clf,
+                        param_grid[name],
+                        refit=True,
+                        cv=inner_cv,
+                        n_jobs=self.n_jobs,
+                        scoring=self.paradigm.scoring,
+                        return_train_score=True,
+                    )
+                    return search
                 else:
-                    if nested:
-                        inner_cv = StratifiedKFold(3, shuffle=True, random_state=self.random_state)
-                        search = GridSearchCV(
-                            grid_clf,
-                            param_grid[name],
-                            refit=True,
-                            cv=inner_cv,
-                            n_jobs=self.n_jobs,
-                            scoring=self.paradigm.scoring,
-                            return_train_score=True,
-                        )
-                        return search
-                    else:
-                        search = GridSearchCV(
-                            grid_clf,
-                            param_grid[name],
-                            refit=True,
-                            cv=cv,
-                            n_jobs=self.n_jobs,
-                            scoring=self.paradigm.scoring,
-                            return_train_score=True,
-                        )
-                        search.fit(X_, y_)
-                        grid_clf.set_params(**search.best_params_)
+                    search = GridSearchCV(
+                        grid_clf,
+                        param_grid[name],
+                        refit=True,
+                        cv=cv,
+                        n_jobs=self.n_jobs,
+                        scoring=self.paradigm.scoring,
+                        return_train_score=True,
+                    )
+                    search.fit(X_, y_)
+                    grid_clf.set_params(**search.best_params_)
 
-                        # Save the result
-                        os.makedirs(name_grid, exist_ok=True)
-                        joblib.dump(
-                            search,
-                            os.path.join(name_grid, "Grid_Search_WithinSession.pkl"),
-                        )
-                        del search
-                        return grid_clf
+                    # Save the result
+                    os.makedirs(name_grid, exist_ok=True)
+                    joblib.dump(
+                        search,
+                        os.path.join(name_grid, "Grid_Search_WithinSession.pkl"),
+                    )
+                    del search
+                    return grid_clf
             else:
                 return grid_clf
 
@@ -203,7 +195,7 @@ class WithinSessionEvaluation(BaseEvaluation):
             return grid_clf
 
     # flake8: noqa: C901
-    def _evaluate(self, dataset, pipelines, param_grid, nested):
+    def _evaluate(self, dataset, pipelines, param_grid, nested, takens):
         # Progress Bar at subject level
         for subject in tqdm(dataset.subject_list, desc=f"{dataset.code}-WithinSession"):
             # check if we already have result for this subject/pipeline
@@ -234,97 +226,146 @@ class WithinSessionEvaluation(BaseEvaluation):
                     X_ = X[ix]
                     y_ = y[ix] if self.mne_labels else y_cv
 
-                    grid_clf = clone(clf)
+                    if not takens:
+                        grid_clf = clone(clf)
 
-                    # Create folder for grid search results
-                    name_grid = create_save_path(
-                        self.hdf5_path,
-                        dataset.code,
-                        subject,
-                        session,
-                        name,
-                        grid=True,
-                        eval_type="WithinSession",
-                    )
-
-                    # Implement Grid Search
-                    grid_clf = self._grid_search(
-                        param_grid, name_grid, name, grid_clf, X_, y_, cv, nested=nested
-                    )
-
-                    if self.hdf5_path is not None:
-                        model_save_path = create_save_path(
+                        # Create folder for grid search results
+                        name_grid = create_save_path(
                             self.hdf5_path,
                             dataset.code,
                             subject,
                             session,
                             name,
-                            grid=False,
+                            grid=True,
                             eval_type="WithinSession",
                         )
 
-                    if isinstance(X, BaseEpochs):
+                        # Implement Grid Search
+                        grid_clf = self._grid_search(
+                            param_grid, name_grid, name, grid_clf, X_, y_, cv, nested=nested
+                        )
+
+                        if self.hdf5_path is not None:
+                            model_save_path = create_save_path(
+                                self.hdf5_path,
+                                dataset.code,
+                                subject,
+                                session,
+                                name,
+                                grid=False,
+                                eval_type="WithinSession",
+                            )
+
+                        if isinstance(X, BaseEpochs):
+                            scorer = get_scorer(self.paradigm.scoring)
+                            acc = list()
+                            X_ = X[ix]
+                            y_ = y[ix] if self.mne_labels else y_cv
+                            for cv_ind, (train, test) in enumerate(cv.split(X_, y_)):
+                                cvclf = clone(grid_clf)
+                                cvclf.fit(X_[train], y_[train])
+                                acc.append(scorer(cvclf, X_[test], y_[test]))
+
+                                if self.hdf5_path is not None:
+                                    save_model_cv(
+                                        model=cvclf, save_path=model_save_path, cv_index=cv_ind
+                                    )
+
+                            acc = np.array(acc)
+                            score = acc.mean()
+                        else:
+                            results = cross_validate(
+                                grid_clf,
+                                X[ix],
+                                y_cv,
+                                cv=cv,
+                                scoring=self.paradigm.scoring,  # scoring=[self.paradigm.scoring, 'precision', 'recall', 'f1'],
+                                n_jobs=self.n_jobs,
+                                error_score=self.error_score,
+                                return_estimator=True,
+                            )
+                            score = results["test_score"].mean()
+                            # score = results["test_roc_auc"].mean()
+                            # score_precision = results["test_precision"].mean()
+                            # score_recall = results["test_recall"].mean()
+                            # score_f1 = results["test_f1"].mean()
+                            if self.hdf5_path is not None:
+                                save_model_list(
+                                    results["estimator"],
+                                    score_list=["test_score"],
+                                    # score_list=results["test_roc_auc"], #["test_score"],
+                                    save_path=model_save_path,
+                                )
+                        if _carbonfootprint:
+                            emissions = tracker.stop()
+                            if emissions is None:
+                                emissions = np.NaN
+                        duration = time() - t_start
+
+                        nchan = X.info["nchan"] if isinstance(X, BaseEpochs) else X.shape[1]
+                        res = {
+                            "time": duration / 5.0,  # 5 fold CV
+                            "dataset": dataset,
+                            "subject": subject,
+                            "session": session,
+                            "score": score,
+                            # "score_precision": score_precision,
+                            # "score_recall": score_recall,
+                            # "score_f1": score_f1,
+                            "n_samples": len(y_cv),  # not training sample
+                            "n_channels": nchan,
+                            "pipeline": name,
+                        }
+                        if _carbonfootprint:
+                            res["carbon_emission"] = (1000 * emissions,)
+
+                        yield res
+
+                    else:
+                        grid_clf = deepcopy(clf)
                         scorer = get_scorer(self.paradigm.scoring)
                         acc = list()
-                        X_ = X[ix]
-                        y_ = y[ix] if self.mne_labels else y_cv
-                        for cv_ind, (train, test) in enumerate(cv.split(X_, y_)):
-                            cvclf = clone(grid_clf)
-                            cvclf.fit(X_[train], y_[train])
-                            acc.append(scorer(cvclf, X_[test], y_[test]))
+                        for train, test in cv.split(X, y):
+                            if takens == "aFNN":
+                                order, lag = Takens.aFNN(X_)
+                                grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                                grid_clf.fit(X[train], y[train])
+                                acc.append(scorer(grid_clf, X[test], y[test]))
 
-                            if self.hdf5_path is not None:
-                                save_model_cv(
-                                    model=cvclf, save_path=model_save_path, cv_index=cv_ind
-                                )
+                            elif takens == "MDOP":
+                                order, lag = Takens.MDOP(X_)
+                                grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                                grid_clf.fit(X[train], y[train])
+                                acc.append(scorer(grid_clf, X[test], y[test]))
 
                         acc = np.array(acc)
                         score = acc.mean()
-                    else:
-                        results = cross_validate(
-                            grid_clf,
-                            X[ix],
-                            y_cv,
-                            cv=cv,
-                            scoring=[self.paradigm.scoring, 'precision', 'recall', 'f1'],
-                            n_jobs=self.n_jobs,
-                            error_score=self.error_score,
-                            return_estimator=True,
-                        )
-                        score = results["test_roc_auc"].mean()
-                        score_precision = results["test_precision"].mean()
-                        score_recall = results["test_recall"].mean()
-                        score_f1 = results["test_f1"].mean()
-                        if self.hdf5_path is not None:
-                            save_model_list(
-                                results["estimator"],
-                                score_list=results["test_roc_auc"], #["test_score"],
-                                save_path=model_save_path,
-                            )
-                    if _carbonfootprint:
-                        emissions = tracker.stop()
-                        if emissions is None:
-                            emissions = np.NaN
-                    duration = time() - t_start
 
-                    nchan = X.info["nchan"] if isinstance(X, BaseEpochs) else X.shape[1]
-                    res = {
-                        "time": duration / 5.0,  # 5 fold CV
-                        "dataset": dataset,
-                        "subject": subject,
-                        "session": session,
-                        "score": score,
-                        "score_precision": score_precision,
-                        "score_recall": score_recall,
-                        "score_f1": score_f1,
-                        "n_samples": len(y_cv),  # not training sample
-                        "n_channels": nchan,
-                        "pipeline": name,
-                    }
-                    if _carbonfootprint:
-                        res["carbon_emission"] = (1000 * emissions,)
+                        if _carbonfootprint:
+                            emissions = tracker.stop()
+                            if emissions is None:
+                                emissions = np.NaN
+                        duration = time() - t_start
 
-                    yield res
+                        nchan = X.info["nchan"] if isinstance(X, BaseEpochs) else X.shape[1]
+                        res = {
+                            "time": duration / 5.0,  # 5 fold CV
+                            "dataset": dataset,
+                            "subject": subject,
+                            "session": session,
+                            "score": score,
+                            # "score_precision": score_precision,
+                            # "score_recall": score_recall,
+                            # "score_f1": score_f1,
+                            "n_samples": len(y_cv),  # not training sample
+                            "n_channels": nchan,
+                            "pipeline": name,
+                        }
+                        if _carbonfootprint:
+                            res["carbon_emission"] = (1000 * emissions,)
+
+                        yield res
+
 
     def get_data_size_subsets(self, y):
         if self.data_size is None:
@@ -458,11 +499,11 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 )
                             yield res
 
-    def evaluate(self, dataset, pipelines, param_grid, nested):
+    def evaluate(self, dataset, pipelines, param_grid, nested, takens):
         if self.calculate_learning_curve:
             yield from self._evaluate_learning_curve(dataset, pipelines)
         else:
-            yield from self._evaluate(dataset, pipelines, param_grid, nested)
+            yield from self._evaluate(dataset, pipelines, param_grid, nested, takens)
 
     def is_valid(self, dataset):
         return True
