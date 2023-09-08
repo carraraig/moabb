@@ -10,8 +10,8 @@ import julia
 julia.install("/home/icarrara/Documents/Programm/Julia/bin/julia")
 julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compiled_modules=False)
 from julia import Pkg
-Pkg.activate("/home/icarrara/Documents/Project/HolographicEEG_NEW/Takens_2")
-from julia import Takens_2
+Pkg.activate("/home/icarrara/Documents/Project/Takens")
+from julia import Takens
 from moabb.pipelines.features import AugmentedDataset
 
 import joblib
@@ -327,13 +327,13 @@ class WithinSessionEvaluation(BaseEvaluation):
                         acc = list()
                         for train, test in cv.split(X, y):
                             if takens == "aFNN":
-                                order, lag = Takens_2.aFNN(X_)
+                                order, lag = Takens.aFNN(X_)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X[train], y[train])
                                 acc.append(scorer(grid_clf, X[test], y[test]))
 
                             elif takens == "MDOP":
-                                order, lag = Takens_2.MDOP(X_)
+                                order, lag = Takens.MDOP(X_)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X[train], y[train])
                                 acc.append(scorer(grid_clf, X[test], y[test]))
@@ -551,7 +551,7 @@ class CrossSessionEvaluation(BaseEvaluation):
             if name in param_grid:
                 alter_grid = deepcopy(grid_clf)
                 if alter_grid.steps[-1][0] == "SPDNet":
-                    order, lag = Takens_2.takens(X)
+                    order, lag = Takens.takens(X)
                     alter_grid.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                     grid_clf = alter_grid
                 else:
