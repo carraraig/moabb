@@ -10,7 +10,7 @@ import julia
 julia.install("/home/icarrara/Documents/Programm/Julia/bin/julia")
 julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compiled_modules=False)
 from julia import Pkg
-Pkg.activate("/home/icarrara/Documents/Project/moabb/Takens")
+Pkg.activate("/home/icarrara/Documents/Project/Takens")
 from julia import Takens
 from moabb.pipelines.features import AugmentedDataset
 
