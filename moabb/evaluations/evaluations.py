@@ -10,8 +10,8 @@ import julia
 julia.install("/home/icarrara/Documents/Programm/Julia/bin/julia")
 julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compiled_modules=False)
 from julia import Pkg
-Pkg.activate("/home/icarrara/Documents/Project/Takens")
-from julia import Takens
+Pkg.activate("/home/icarrara/Documents/Project/HolographicEEG_NEW/Takens_2")
+from julia import Takens_2
 from moabb.pipelines.features import AugmentedDataset
 
 import joblib
@@ -327,13 +327,13 @@ class WithinSessionEvaluation(BaseEvaluation):
                         acc = list()
                         for train, test in cv.split(X, y):
                             if takens == "aFNN":
-                                order, lag = Takens.aFNN(X_)
+                                order, lag = Takens_2.aFNN(X_)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X[train], y[train])
                                 acc.append(scorer(grid_clf, X[test], y[test]))
 
                             elif takens == "MDOP":
-                                order, lag = Takens.MDOP(X_)
+                                order, lag = Takens_2.MDOP(X_)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X[train], y[train])
                                 acc.append(scorer(grid_clf, X[test], y[test]))
