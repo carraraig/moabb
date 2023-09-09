@@ -325,18 +325,18 @@ class WithinSessionEvaluation(BaseEvaluation):
                         grid_clf = deepcopy(clf)
                         scorer = get_scorer(self.paradigm.scoring)
                         acc = list()
-                        for train, test in cv.split(X, y):
+                        for train, test in cv.split(X_, y_):
                             if takens == "aFNN":
-                                order, lag = Takens.aFNN(X_)
+                                order, lag = Takens.aFNN(X_[train])
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
-                                grid_clf.fit(X[train], y[train])
-                                acc.append(scorer(grid_clf, X[test], y[test]))
+                                grid_clf.fit(X_[train], y_[train])
+                                acc.append(scorer(grid_clf, X_[test], y_[test]))
 
                             elif takens == "MDOP":
-                                order, lag = Takens.MDOP(X_)
+                                order, lag = Takens.MDOP(X_[train])
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
-                                grid_clf.fit(X[train], y[train])
-                                acc.append(scorer(grid_clf, X[test], y[test]))
+                                grid_clf.fit(X_[train], y_[train])
+                                acc.append(scorer(grid_clf, X_[test], y_[test]))
 
                         acc = np.array(acc)
                         score = acc.mean()
