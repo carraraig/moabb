@@ -627,6 +627,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                     # Initialise CodeCarbon
                     tracker = EmissionsTracker(save_to_file=False, log_level="error")
                     tracker.start()
+                t_start = time()
 
                 # we want to store a results per session
                 cv = LeaveOneGroupOut()
@@ -651,11 +652,6 @@ class CrossSessionEvaluation(BaseEvaluation):
                         param_grid, name_grid, name, grid_clf, X, y, cv, groups, nested=nested
                     )
 
-                    if _carbonfootprint:
-                        emissions_grid = tracker.stop()
-                        if emissions_grid is None:
-                            emissions_grid = 0
-
                     if self.hdf5_path is not None:
                         model_save_path = create_save_path(
                             hdf5_path=self.hdf5_path,
@@ -669,9 +665,6 @@ class CrossSessionEvaluation(BaseEvaluation):
 
                     for cv_ind, (train, test) in enumerate(cv.split(X, y, groups)):
                         model_list = []
-                        if _carbonfootprint:
-                            tracker.start()
-                        t_start = time()
                         if isinstance(X, BaseEpochs):
                             cvclf = clone(grid_clf)
                             cvclf.fit(X[train], y[train])
@@ -721,7 +714,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                             "pipeline": name,
                         }
                         if _carbonfootprint:
-                            res["carbon_emission"] = (1000 * (emissions + emissions_grid),)
+                            res["carbon_emission"] = (1000 * emissions)
 
                         yield res
 
