@@ -654,6 +654,9 @@ class CrossSessionEvaluation(BaseEvaluation):
             y = y if self.mne_labels else le.fit_transform(y)
             groups = metadata.session.values
             scorer = get_scorer(self.paradigm.scoring)
+            scorer_precision = get_scorer("precision_micro")
+            scorer_recall = get_scorer("recall_micro")
+            scorer_f1 = get_scorer("f1_micro")
 
             for name, clf in run_pipes.items():
                 if _carbonfootprint:
@@ -703,17 +706,21 @@ class CrossSessionEvaluation(BaseEvaluation):
                             cvclf.fit(X[train], y[train])
                             model_list.append(cvclf)
                             score = scorer(cvclf, X[test], y[test])
+                            precision = scorer_precision(grid_clf, X[test], y[test])
+                            recall = scorer_recall(grid_clf, X[test], y[test])
+                            f1 = scorer_f1(grid_clf, X[test], y[test])
 
                             if self.hdf5_path is not None:
                                 save_model_cv(
                                     model=cvclf, save_path=model_save_path, cv_index=str(cv_ind)
                                 )
                         else:
+                            score_dic = {"score": scorer, "precision": scorer_precision, "recall": scorer_recall, "f1": scorer_f1}
                             result = _fit_and_score(
                                 clone(grid_clf),
                                 X,
                                 y,
-                                scorer,
+                                score_dic,
                                 train,
                                 test,
                                 verbose=False,
@@ -722,7 +729,10 @@ class CrossSessionEvaluation(BaseEvaluation):
                                 error_score=self.error_score,
                                 return_estimator=True,
                             )
-                            score = result["test_scores"]
+                            score = result["test_scores"]["score"]
+                            precision = result["test_scores"]["precision"]
+                            recall = result["test_scores"]["recall"]
+                            f1 = result["test_scores"]["f1"]
                             model_list = result["estimator"]
                         if _carbonfootprint:
                             emissions = tracker.stop()
@@ -742,6 +752,9 @@ class CrossSessionEvaluation(BaseEvaluation):
                             "subject": subject,
                             "session": groups[test][0],
                             "score": score,
+                            "score_precision": precision,
+                            "score_recall": recall,
+                            "score_f1": f1,
                             "n_samples": len(train),
                             "n_channels": nchan,
                             "pipeline": name,
@@ -754,6 +767,9 @@ class CrossSessionEvaluation(BaseEvaluation):
                 else:
                     grid_clf = deepcopy(clf)
                     scorer = get_scorer(self.paradigm.scoring)
+                    scorer_precision = get_scorer("precision_micro")
+                    scorer_recall = get_scorer("recall_micro")
+                    scorer_f1 = get_scorer("f1_micro")
                     for train, test in cv.split(X, y, groups):
                         if takens == "aFNN":
                             order, lag = Takens.aFNN(X[train])
@@ -762,6 +778,9 @@ class CrossSessionEvaluation(BaseEvaluation):
                             grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
+                            precision = scorer_precision(grid_clf, X[test], y[test])
+                            recall = scorer_recall(grid_clf, X[test], y[test])
+                            f1 = scorer_f1(grid_clf, X[test], y[test])
 
                         elif takens == "MDOP":
                             order, lag = Takens.MDOP(X[train])
@@ -770,6 +789,9 @@ class CrossSessionEvaluation(BaseEvaluation):
                             grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
+                            precision = scorer_precision(grid_clf, X[test], y[test])
+                            recall = scorer_recall(grid_clf, X[test], y[test])
+                            f1 = scorer_f1(grid_clf, X[test], y[test])
 
                         if _carbonfootprint:
                             emissions = tracker.stop()
@@ -784,6 +806,9 @@ class CrossSessionEvaluation(BaseEvaluation):
                             "subject": subject,
                             "session": groups[test][0],
                             "score": score,
+                            "score_precision": precision,
+                            "score_recall": recall,
+                            "score_f1": f1,
                             "n_samples": len(train),
                             "n_channels": nchan,
                             "pipeline": name,
