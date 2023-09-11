@@ -125,13 +125,13 @@ class Results:
             else:
                 return res
 
-        col_names = ["score", "time", "samples"]
-        # col_names = ["score", "score_precision", "score_recall", "score_f1", "time", "samples"]
+        # col_names = ["score", "time", "samples"]
+        col_names = ["score", "score_precision", "score_recall", "score_f1", "time", "samples"]
         if _carbonfootprint:
-            n_cols = 4  # 7
+            n_cols = 7  # 4
             col_names.append("carbon_emission")
         else:
-            n_cols = 3  # 6
+            n_cols = 6  # 3
 
         with h5py.File(self.filepath, "r+") as f:
             for name, data_dict in results.items():
@@ -182,9 +182,9 @@ class Results:
                             f" contain only these keys: {d.keys()}."
                         ) from None
                     cols = [d["score"],
-                            # d["score_precision"],
-                            # d["score_recall"],
-                            # d["score_f1"],
+                            d["score_precision"],
+                            d["score_recall"],
+                            d["score_f1"],
                             d["time"],
                             d["n_samples"]]
                     if _carbonfootprint:

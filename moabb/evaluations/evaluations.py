@@ -279,23 +279,26 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 X[ix],
                                 y_cv,
                                 cv=cv,
-                                scoring=self.paradigm.scoring,  # scoring=[self.paradigm.scoring, 'precision', 'recall', 'f1'],
+                                scoring=[self.paradigm.scoring, 'precision_micro', 'recall_micro', 'f1_micro'],
                                 n_jobs=self.n_jobs,
                                 error_score=self.error_score,
                                 return_estimator=True,
                             )
-                            score = results["test_score"].mean()
+                            if "test_roc_auc" in results:
+                                score = results["test_roc_auc"].mean()
+                            elif "test_accuracy" in results:
+                                score = results["test_accuracy"].mean()
                             # score = results["test_roc_auc"].mean()
-                            # score_precision = results["test_precision"].mean()
-                            # score_recall = results["test_recall"].mean()
-                            # score_f1 = results["test_f1"].mean()
-                            if self.hdf5_path is not None:
-                                save_model_list(
-                                    results["estimator"],
-                                    score_list=["test_score"],
-                                    # score_list=results["test_roc_auc"], #["test_score"],
-                                    save_path=model_save_path,
-                                )
+                            score_precision = results["test_precision_micro"].mean()
+                            score_recall = results["test_recall_micro"].mean()
+                            score_f1 = results["test_f1_micro"].mean()
+                            #if self.hdf5_path is not None:
+                            #    save_model_list(
+                            #        results["estimator"],
+                            #        score_list=["test_score"],
+                            #        # score_list=results["test_roc_auc"], #["test_score"],
+                            #        save_path=model_save_path,
+                            #    )
                         if _carbonfootprint:
                             emissions = tracker.stop()
                             if emissions is None:
@@ -309,9 +312,9 @@ class WithinSessionEvaluation(BaseEvaluation):
                             "subject": subject,
                             "session": session,
                             "score": score,
-                            # "score_precision": score_precision,
-                            # "score_recall": score_recall,
-                            # "score_f1": score_f1,
+                            "score_precision": score_precision,
+                            "score_recall": score_recall,
+                            "score_f1": score_f1,
                             "n_samples": len(y_cv),  # not training sample
                             "n_channels": nchan,
                             "pipeline": name,
@@ -324,26 +327,40 @@ class WithinSessionEvaluation(BaseEvaluation):
                     else:
                         grid_clf = deepcopy(clf)
                         scorer = get_scorer(self.paradigm.scoring)
+                        scorer_precision = get_scorer("precision_micro")
+                        scorer_recall = get_scorer("recall_micro")
+                        scorer_f1 = get_scorer("f1_micro")
                         acc = list()
+                        precision = list()
+                        recall = list()
+                        f1 = list()
                         for train, test in cv.split(X_, y_):
                             if takens == "aFNN":
                                 order, lag = Takens.aFNN(X_[train])
-                                print("Order: ", order)
-                                print("Lag: ", lag)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
+                                precision.append(scorer_precision(grid_clf, X_[test], y_[test]))
+                                recall.append(scorer_recall(grid_clf, X_[test], y_[test]))
+                                f1.append(scorer_f1(grid_clf, X_[test], y_[test]))
 
                             elif takens == "MDOP":
                                 order, lag = Takens.MDOP(X_[train])
-                                print("Order: ", order)
-                                print("Lag: ", lag)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
+                                precision.append(scorer_precision(grid_clf, X_[test], y_[test]))
+                                recall.append(scorer_recall(grid_clf, X_[test], y_[test]))
+                                f1.append(scorer_f1(grid_clf, X_[test], y_[test]))
 
                         acc = np.array(acc)
                         score = acc.mean()
+                        precision = np.array(precision)
+                        score_precision = precision.mean()
+                        recall = np.array(recall)
+                        score_recall = recall.mean()
+                        f1 = np.array(f1)
+                        score_f1 = f1.mean()
 
                         if _carbonfootprint:
                             emissions = tracker.stop()
@@ -358,9 +375,9 @@ class WithinSessionEvaluation(BaseEvaluation):
                             "subject": subject,
                             "session": session,
                             "score": score,
-                            # "score_precision": score_precision,
-                            # "score_recall": score_recall,
-                            # "score_f1": score_f1,
+                            "score_precision": score_precision,
+                            "score_recall": score_recall,
+                            "score_f1": score_f1,
                             "n_samples": len(y_cv),  # not training sample
                             "n_channels": nchan,
                             "pipeline": name,
