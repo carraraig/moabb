@@ -258,13 +258,22 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                         if isinstance(X, BaseEpochs):
                             scorer = get_scorer(self.paradigm.scoring)
+                            scorer_precision = get_scorer("precision_micro")
+                            scorer_recall = get_scorer("recall_micro")
+                            scorer_f1 = get_scorer("f1_micro")
                             acc = list()
+                            precision = list()
+                            recall = list()
+                            f1 = list()
                             X_ = X[ix]
                             y_ = y[ix] if self.mne_labels else y_cv
                             for cv_ind, (train, test) in enumerate(cv.split(X_, y_)):
                                 cvclf = clone(grid_clf)
                                 cvclf.fit(X_[train], y_[train])
                                 acc.append(scorer(cvclf, X_[test], y_[test]))
+                                precision.append(scorer_precision(grid_clf, X_[test], y_[test]))
+                                recall.append(scorer_recall(grid_clf, X_[test], y_[test]))
+                                f1.append(scorer_f1(grid_clf, X_[test], y_[test]))
 
                                 if self.hdf5_path is not None:
                                     save_model_cv(
@@ -273,6 +282,13 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                             acc = np.array(acc)
                             score = acc.mean()
+                            precision = np.array(precision)
+                            score_precision = precision.mean()
+                            recall = np.array(recall)
+                            score_recall = recall.mean()
+                            f1 = np.array(f1)
+                            score_f1 = f1.mean()
+
                         else:
                             results = cross_validate(
                                 grid_clf,
