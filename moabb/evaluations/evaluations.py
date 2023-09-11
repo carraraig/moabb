@@ -546,14 +546,21 @@ class CrossSessionEvaluation(BaseEvaluation):
         if returning MNE epoch, use original dataset label if True
     """
 
-    def _grid_search(self, param_grid, name_grid, name, grid_clf, X, y, cv, groups):
+    def _grid_search(self, param_grid, name_grid, name, grid_clf, X, y, cv, groups, nested):
         if param_grid is not None and not os.path.isdir(name_grid):
             if name in param_grid:
-                alter_grid = deepcopy(grid_clf)
-                if alter_grid.steps[-1][0] == "SPDNet":
-                    order, lag = Takens.takens(X)
-                    alter_grid.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
-                    grid_clf = alter_grid
+                if nested:
+                    inner_cv = StratifiedKFold(3, shuffle=True, random_state=self.random_state)
+                    search = GridSearchCV(
+                        grid_clf,
+                        param_grid[name],
+                        refit=True,
+                        cv=inner_cv,
+                        n_jobs=self.n_jobs,
+                        scoring=self.paradigm.scoring,
+                        return_train_score=True,
+                    )
+                    return search
                 else:
                     search = GridSearchCV(
                         grid_clf,
@@ -574,7 +581,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                         os.path.join(name_grid, "Grid_Search_CrossSession.pkl"),
                     )
                     del search
-                return grid_clf
+                    return grid_clf
 
             else:
                 return grid_clf
@@ -588,7 +595,7 @@ class CrossSessionEvaluation(BaseEvaluation):
             return grid_clf
 
     # flake8: noqa: C901
-    def evaluate(self, dataset, pipelines, param_grid):
+    def evaluate(self, dataset, pipelines, param_grid, nested, takens):
         if not self.is_valid(dataset):
             raise AssertionError("Dataset is not appropriate for evaluation")
         # Progressbar at subject level
@@ -620,97 +627,137 @@ class CrossSessionEvaluation(BaseEvaluation):
                 # we want to store a results per session
                 cv = LeaveOneGroupOut()
 
-                grid_clf = clone(clf)
+                if not takens:
 
-                # Load result if the folder exist
-                name_grid = create_save_path(
-                    hdf5_path=self.hdf5_path,
-                    code=dataset.code,
-                    subject=subject,
-                    session="",
-                    name=name,
-                    grid=True,
-                    eval_type="CrossSession",
-                )
+                    grid_clf = clone(clf)
 
-                # Implement Grid Search
-                grid_clf = self._grid_search(
-                    param_grid, name_grid, name, grid_clf, X, y, cv, groups
-                )
-
-                if _carbonfootprint:
-                    emissions_grid = tracker.stop()
-                    if emissions_grid is None:
-                        emissions_grid = 0
-
-                if self.hdf5_path is not None:
-                    model_save_path = create_save_path(
+                    # Load result if the folder exist
+                    name_grid = create_save_path(
                         hdf5_path=self.hdf5_path,
                         code=dataset.code,
                         subject=subject,
                         session="",
                         name=name,
-                        grid=False,
+                        grid=True,
                         eval_type="CrossSession",
                     )
 
-                for cv_ind, (train, test) in enumerate(cv.split(X, y, groups)):
-                    model_list = []
-                    if _carbonfootprint:
-                        tracker.start()
-                    t_start = time()
-                    if isinstance(X, BaseEpochs):
-                        cvclf = clone(grid_clf)
-                        cvclf.fit(X[train], y[train])
-                        model_list.append(cvclf)
-                        score = scorer(cvclf, X[test], y[test])
+                    # Implement Grid Search
+                    grid_clf = self._grid_search(
+                        param_grid, name_grid, name, grid_clf, X, y, cv, groups, nested=nested
+                    )
 
-                        if self.hdf5_path is not None:
-                            save_model_cv(
-                                model=cvclf, save_path=model_save_path, cv_index=str(cv_ind)
-                            )
-                    else:
-                        result = _fit_and_score(
-                            clone(grid_clf),
-                            X,
-                            y,
-                            scorer,
-                            train,
-                            test,
-                            verbose=False,
-                            parameters=None,
-                            fit_params=None,
-                            error_score=self.error_score,
-                            return_estimator=True,
-                        )
-                        score = result["test_scores"]
-                        model_list = result["estimator"]
                     if _carbonfootprint:
-                        emissions = tracker.stop()
-                        if emissions is None:
-                            emissions = 0
+                        emissions_grid = tracker.stop()
+                        if emissions_grid is None:
+                            emissions_grid = 0
 
-                    duration = time() - t_start
                     if self.hdf5_path is not None:
-                        save_model_list(
-                            model_list=model_list, score_list=score, save_path=model_save_path
+                        model_save_path = create_save_path(
+                            hdf5_path=self.hdf5_path,
+                            code=dataset.code,
+                            subject=subject,
+                            session="",
+                            name=name,
+                            grid=False,
+                            eval_type="CrossSession",
                         )
 
-                    nchan = X.info["nchan"] if isinstance(X, BaseEpochs) else X.shape[1]
-                    res = {
-                        "time": duration,
-                        "dataset": dataset,
-                        "subject": subject,
-                        "session": groups[test][0],
-                        "score": score,
-                        "n_samples": len(train),
-                        "n_channels": nchan,
-                        "pipeline": name,
-                    }
-                    if _carbonfootprint:
-                        res["carbon_emission"] = (1000 * (emissions + emissions_grid),)
+                    for cv_ind, (train, test) in enumerate(cv.split(X, y, groups)):
+                        model_list = []
+                        if _carbonfootprint:
+                            tracker.start()
+                        t_start = time()
+                        if isinstance(X, BaseEpochs):
+                            cvclf = clone(grid_clf)
+                            cvclf.fit(X[train], y[train])
+                            model_list.append(cvclf)
+                            score = scorer(cvclf, X[test], y[test])
 
-                    yield res
+                            if self.hdf5_path is not None:
+                                save_model_cv(
+                                    model=cvclf, save_path=model_save_path, cv_index=str(cv_ind)
+                                )
+                        else:
+                            result = _fit_and_score(
+                                clone(grid_clf),
+                                X,
+                                y,
+                                scorer,
+                                train,
+                                test,
+                                verbose=False,
+                                parameters=None,
+                                fit_params=None,
+                                error_score=self.error_score,
+                                return_estimator=True,
+                            )
+                            score = result["test_scores"]
+                            model_list = result["estimator"]
+                        if _carbonfootprint:
+                            emissions = tracker.stop()
+                            if emissions is None:
+                                emissions = 0
+
+                        duration = time() - t_start
+                        if self.hdf5_path is not None:
+                            save_model_list(
+                                model_list=model_list, score_list=score, save_path=model_save_path
+                            )
+
+                        nchan = X.info["nchan"] if isinstance(X, BaseEpochs) else X.shape[1]
+                        res = {
+                            "time": duration,
+                            "dataset": dataset,
+                            "subject": subject,
+                            "session": groups[test][0],
+                            "score": score,
+                            "n_samples": len(train),
+                            "n_channels": nchan,
+                            "pipeline": name,
+                        }
+                        if _carbonfootprint:
+                            res["carbon_emission"] = (1000 * (emissions + emissions_grid),)
+
+                        yield res
+
+                else:
+                    grid_clf = deepcopy(clf)
+                    scorer = get_scorer(self.paradigm.scoring)
+                    for train, test in cv.split(X, y, groups):
+                        if takens == "aFNN":
+                            order, lag = Takens.aFNN(X[train])
+                            grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                            grid_clf.fit(X[train], y[train])
+                            score = scorer(grid_clf, X[test], y[test])
+
+                        elif takens == "MDOP":
+                            order, lag = Takens.MDOP(X[train])
+                            grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                            grid_clf.fit(X[train], y[train])
+                            score = scorer(grid_clf, X[test], y[test])
+
+                        if _carbonfootprint:
+                            emissions = tracker.stop()
+                            if emissions is None:
+                                emissions = np.NaN
+                        duration = time() - t_start
+
+                        nchan = X.info["nchan"] if isinstance(X, BaseEpochs) else X.shape[1]
+                        res = {
+                            "time": duration,
+                            "dataset": dataset,
+                            "subject": subject,
+                            "session": groups[test][0],
+                            "score": score,
+                            "n_samples": len(train),
+                            "n_channels": nchan,
+                            "pipeline": name,
+                        }
+                        if _carbonfootprint:
+                            res["carbon_emission"] = (1000 * emissions)
+
+                        yield res
 
     def is_valid(self, dataset):
         return dataset.n_sessions > 1
