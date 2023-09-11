@@ -328,12 +328,16 @@ class WithinSessionEvaluation(BaseEvaluation):
                         for train, test in cv.split(X_, y_):
                             if takens == "aFNN":
                                 order, lag = Takens.aFNN(X_[train])
+                                print("Order: ", order)
+                                print("Lag: ", lag)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
 
                             elif takens == "MDOP":
                                 order, lag = Takens.MDOP(X_[train])
+                                print("Order: ", order)
+                                print("Lag: ", lag)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
@@ -727,12 +731,16 @@ class CrossSessionEvaluation(BaseEvaluation):
                     for train, test in cv.split(X, y, groups):
                         if takens == "aFNN":
                             order, lag = Takens.aFNN(X[train])
+                            print("Order: ", order)
+                            print("Lag: ", lag)
                             grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
 
                         elif takens == "MDOP":
                             order, lag = Takens.MDOP(X[train])
+                            print("Order: ", order)
+                            print("Lag: ", lag)
                             grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
