@@ -271,9 +271,9 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 cvclf = clone(grid_clf)
                                 cvclf.fit(X_[train], y_[train])
                                 acc.append(scorer(cvclf, X_[test], y_[test]))
-                                precision.append(scorer_precision(grid_clf, X_[test], y_[test]))
-                                recall.append(scorer_recall(grid_clf, X_[test], y_[test]))
-                                f1.append(scorer_f1(grid_clf, X_[test], y_[test]))
+                                precision.append(scorer_precision(cvclf, X_[test], y_[test]))
+                                recall.append(scorer_recall(cvclf, X_[test], y_[test]))
+                                f1.append(scorer_f1(cvclf, X_[test], y_[test]))
 
                                 if self.hdf5_path is not None:
                                     save_model_cv(
@@ -706,9 +706,9 @@ class CrossSessionEvaluation(BaseEvaluation):
                             cvclf.fit(X[train], y[train])
                             model_list.append(cvclf)
                             score = scorer(cvclf, X[test], y[test])
-                            precision = scorer_precision(grid_clf, X[test], y[test])
-                            recall = scorer_recall(grid_clf, X[test], y[test])
-                            f1 = scorer_f1(grid_clf, X[test], y[test])
+                            precision = scorer_precision(cvclf, X[test], y[test])
+                            recall = scorer_recall(cvclf, X[test], y[test])
+                            f1 = scorer_f1(cvclf, X[test], y[test])
 
                             if self.hdf5_path is not None:
                                 save_model_cv(
