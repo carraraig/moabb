@@ -258,9 +258,9 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                         if isinstance(X, BaseEpochs):
                             scorer = get_scorer(self.paradigm.scoring)
-                            scorer_precision = get_scorer("precision_micro")
-                            scorer_recall = get_scorer("recall_micro")
-                            scorer_f1 = get_scorer("f1_micro")
+                            scorer_precision = get_scorer("precision_macro")
+                            scorer_recall = get_scorer("recall_macro")
+                            scorer_f1 = get_scorer("f1_macro")
                             acc = list()
                             precision = list()
                             recall = list()
@@ -295,7 +295,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 X[ix],
                                 y_cv,
                                 cv=cv,
-                                scoring=[self.paradigm.scoring, 'precision_micro', 'recall_micro', 'f1_micro'],
+                                scoring=[self.paradigm.scoring, 'precision_macro', 'recall_macro', 'f1_macro'],
                                 n_jobs=self.n_jobs,
                                 error_score=self.error_score,
                                 return_estimator=True,
@@ -305,10 +305,15 @@ class WithinSessionEvaluation(BaseEvaluation):
                             elif "test_accuracy" in results:
                                 score = results["test_accuracy"].mean()
                             # score = results["test_roc_auc"].mean()
-                            score_precision = results["test_precision_micro"].mean()
-                            score_recall = results["test_recall_micro"].mean()
-                            score_f1 = results["test_f1_micro"].mean()
-                            #if self.hdf5_path is not None:
+                            score_precision = results["test_precision_macro"].mean()
+                            score_recall = results["test_recall_macro"].mean()
+                            score_f1 = results["test_f1_macro"].mean()
+                            if self.hdf5_path is not None:
+                                save_model_list(
+                                        results["estimator"],
+                                        score_list=score,
+                                        save_path=model_save_path,
+                                    )
                             #    save_model_list(
                             #        results["estimator"],
                             #        score_list=["test_score"],
@@ -343,9 +348,9 @@ class WithinSessionEvaluation(BaseEvaluation):
                     else:
                         grid_clf = deepcopy(clf)
                         scorer = get_scorer(self.paradigm.scoring)
-                        scorer_precision = get_scorer("precision_micro")
-                        scorer_recall = get_scorer("recall_micro")
-                        scorer_f1 = get_scorer("f1_micro")
+                        scorer_precision = get_scorer("precision_macro")
+                        scorer_recall = get_scorer("recall_macro")
+                        scorer_f1 = get_scorer("f1_macro")
                         acc = list()
                         precision = list()
                         recall = list()
@@ -654,9 +659,9 @@ class CrossSessionEvaluation(BaseEvaluation):
             y = y if self.mne_labels else le.fit_transform(y)
             groups = metadata.session.values
             scorer = get_scorer(self.paradigm.scoring)
-            scorer_precision = get_scorer("precision_micro")
-            scorer_recall = get_scorer("recall_micro")
-            scorer_f1 = get_scorer("f1_micro")
+            scorer_precision = get_scorer("precision_macro")
+            scorer_recall = get_scorer("recall_macro")
+            scorer_f1 = get_scorer("f1_macro")
 
             for name, clf in run_pipes.items():
                 if _carbonfootprint:
@@ -767,9 +772,9 @@ class CrossSessionEvaluation(BaseEvaluation):
                 else:
                     grid_clf = deepcopy(clf)
                     scorer = get_scorer(self.paradigm.scoring)
-                    scorer_precision = get_scorer("precision_micro")
-                    scorer_recall = get_scorer("recall_micro")
-                    scorer_f1 = get_scorer("f1_micro")
+                    scorer_precision = get_scorer("precision_macro")
+                    scorer_recall = get_scorer("recall_macro")
+                    scorer_f1 = get_scorer("f1_macro")
                     for train, test in cv.split(X, y, groups):
                         if takens == "aFNN":
                             order, lag = Takens.aFNN(X[train])
