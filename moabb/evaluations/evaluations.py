@@ -355,7 +355,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                         precision = list()
                         recall = list()
                         f1 = list()
-                        for train, test in cv.split(X_, y_):
+                        for cv_ind, (train, test) in enumerate(cv.split(X_, y_)):
                             if takens == "aFNN":
                                 order, lag = Takens.aFNN(X_[train])
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
@@ -373,6 +373,11 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 precision.append(scorer_precision(grid_clf, X_[test], y_[test]))
                                 recall.append(scorer_recall(grid_clf, X_[test], y_[test]))
                                 f1.append(scorer_f1(grid_clf, X_[test], y_[test]))
+
+                            if self.hdf5_path is not None:
+                                save_model_cv(
+                                    model=cvclf, save_path=model_save_path, cv_index=cv_ind,
+                                )
 
                         acc = np.array(acc)
                         score = acc.mean()
@@ -775,7 +780,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                     scorer_precision = get_scorer("precision_macro")
                     scorer_recall = get_scorer("recall_macro")
                     scorer_f1 = get_scorer("f1_macro")
-                    for train, test in cv.split(X, y, groups):
+                    for cv_ind, (train, test) in enumerate(cv.split(X, y, groups)):
                         if takens == "aFNN":
                             order, lag = Takens.aFNN(X[train])
                             print("Order: ", order)
@@ -797,6 +802,11 @@ class CrossSessionEvaluation(BaseEvaluation):
                             precision = scorer_precision(grid_clf, X[test], y[test])
                             recall = scorer_recall(grid_clf, X[test], y[test])
                             f1 = scorer_f1(grid_clf, X[test], y[test])
+
+                        if self.hdf5_path is not None:
+                            save_model_cv(
+                                model=grid_clf, save_path=model_save_path, cv_index=str(cv_ind)
+                            )
 
                         if _carbonfootprint:
                             emissions = tracker.stop()
