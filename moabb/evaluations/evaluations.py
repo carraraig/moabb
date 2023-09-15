@@ -355,6 +355,18 @@ class WithinSessionEvaluation(BaseEvaluation):
                         precision = list()
                         recall = list()
                         f1 = list()
+
+                        if self.hdf5_path is not None:
+                            model_save_path = create_save_path(
+                                self.hdf5_path,
+                                dataset.code,
+                                subject,
+                                session,
+                                name,
+                                grid=False,
+                                eval_type="WithinSession",
+                            )
+
                         for cv_ind, (train, test) in enumerate(cv.split(X_, y_)):
                             if takens == "aFNN":
                                 order, lag = Takens.aFNN(X_[train])
@@ -780,6 +792,18 @@ class CrossSessionEvaluation(BaseEvaluation):
                     scorer_precision = get_scorer("precision_macro")
                     scorer_recall = get_scorer("recall_macro")
                     scorer_f1 = get_scorer("f1_macro")
+
+                    if self.hdf5_path is not None:
+                        model_save_path = create_save_path(
+                            hdf5_path=self.hdf5_path,
+                            code=dataset.code,
+                            subject=subject,
+                            session="",
+                            name=name,
+                            grid=False,
+                            eval_type="CrossSession",
+                        )
+
                     for cv_ind, (train, test) in enumerate(cv.split(X, y, groups)):
                         if takens == "aFNN":
                             order, lag = Takens.aFNN(X[train])
