@@ -388,7 +388,7 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                             if self.hdf5_path is not None:
                                 save_model_cv(
-                                    model=cvclf, save_path=model_save_path, cv_index=cv_ind,
+                                    model=grid_clf, save_path=model_save_path, cv_index=cv_ind,
                                 )
 
                         acc = np.array(acc)
