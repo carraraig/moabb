@@ -258,22 +258,13 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                         if isinstance(X, BaseEpochs):
                             scorer = get_scorer(self.paradigm.scoring)
-                            scorer_precision = get_scorer("precision_macro")
-                            scorer_recall = get_scorer("recall_macro")
-                            scorer_f1 = get_scorer("f1_macro")
                             acc = list()
-                            precision = list()
-                            recall = list()
-                            f1 = list()
                             X_ = X[ix]
                             y_ = y[ix] if self.mne_labels else y_cv
                             for cv_ind, (train, test) in enumerate(cv.split(X_, y_)):
                                 cvclf = clone(grid_clf)
                                 cvclf.fit(X_[train], y_[train])
                                 acc.append(scorer(cvclf, X_[test], y_[test]))
-                                precision.append(scorer_precision(cvclf, X_[test], y_[test]))
-                                recall.append(scorer_recall(cvclf, X_[test], y_[test]))
-                                f1.append(scorer_f1(cvclf, X_[test], y_[test]))
 
                                 if self.hdf5_path is not None:
                                     save_model_cv(
@@ -282,12 +273,6 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                             acc = np.array(acc)
                             score = acc.mean()
-                            precision = np.array(precision)
-                            score_precision = precision.mean()
-                            recall = np.array(recall)
-                            score_recall = recall.mean()
-                            f1 = np.array(f1)
-                            score_f1 = f1.mean()
 
                         else:
                             results = cross_validate(
@@ -295,19 +280,12 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 X[ix],
                                 y_cv,
                                 cv=cv,
-                                scoring=[self.paradigm.scoring, 'precision_macro', 'recall_macro', 'f1_macro'],
+                                scoring=self.paradigm.scoring,
                                 n_jobs=self.n_jobs,
                                 error_score=self.error_score,
                                 return_estimator=True,
                             )
-                            if "test_roc_auc" in results:
-                                score = results["test_roc_auc"].mean()
-                            elif "test_accuracy" in results:
-                                score = results["test_accuracy"].mean()
-                            # score = results["test_roc_auc"].mean()
-                            score_precision = results["test_precision_macro"].mean()
-                            score_recall = results["test_recall_macro"].mean()
-                            score_f1 = results["test_f1_macro"].mean()
+                            score = results["test_score"].mean()
                             if self.hdf5_path is not None:
                                 save_model_list(
                                         results["estimator"],
@@ -333,9 +311,6 @@ class WithinSessionEvaluation(BaseEvaluation):
                             "subject": subject,
                             "session": session,
                             "score": score,
-                            "score_precision": score_precision,
-                            "score_recall": score_recall,
-                            "score_f1": score_f1,
                             "n_samples": len(y_cv),  # not training sample
                             "n_channels": nchan,
                             "pipeline": name,
@@ -348,13 +323,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                     else:
                         grid_clf = deepcopy(clf)
                         scorer = get_scorer(self.paradigm.scoring)
-                        scorer_precision = get_scorer("precision_macro")
-                        scorer_recall = get_scorer("recall_macro")
-                        scorer_f1 = get_scorer("f1_macro")
                         acc = list()
-                        precision = list()
-                        recall = list()
-                        f1 = list()
 
                         if self.hdf5_path is not None:
                             model_save_path = create_save_path(
@@ -373,18 +342,12 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
-                                precision.append(scorer_precision(grid_clf, X_[test], y_[test]))
-                                recall.append(scorer_recall(grid_clf, X_[test], y_[test]))
-                                f1.append(scorer_f1(grid_clf, X_[test], y_[test]))
 
                             elif takens == "MDOP":
                                 order, lag = Takens.MDOP(X_[train])
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
-                                precision.append(scorer_precision(grid_clf, X_[test], y_[test]))
-                                recall.append(scorer_recall(grid_clf, X_[test], y_[test]))
-                                f1.append(scorer_f1(grid_clf, X_[test], y_[test]))
 
                             if self.hdf5_path is not None:
                                 save_model_cv(
@@ -393,12 +356,6 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                         acc = np.array(acc)
                         score = acc.mean()
-                        precision = np.array(precision)
-                        score_precision = precision.mean()
-                        recall = np.array(recall)
-                        score_recall = recall.mean()
-                        f1 = np.array(f1)
-                        score_f1 = f1.mean()
 
                         if _carbonfootprint:
                             emissions = tracker.stop()
@@ -413,9 +370,6 @@ class WithinSessionEvaluation(BaseEvaluation):
                             "subject": subject,
                             "session": session,
                             "score": score,
-                            "score_precision": score_precision,
-                            "score_recall": score_recall,
-                            "score_f1": score_f1,
                             "n_samples": len(y_cv),  # not training sample
                             "n_channels": nchan,
                             "pipeline": name,
@@ -480,7 +434,7 @@ class WithinSessionEvaluation(BaseEvaluation):
         duration = time() - t_start
         return score, duration
 
-    def _evaluate_learning_curve(self, dataset, pipelines):
+    def _evaluate_learning_curve(self, dataset, pipelines, param_grid, nested):
         # Progressbar at subject level
         for subject in tqdm(dataset.subject_list, desc=f"{dataset.code}-WithinSession"):
             # check if we already have result for this subject/pipeline
@@ -538,6 +492,32 @@ class WithinSessionEvaluation(BaseEvaluation):
                             else X_train.shape[1]
                         )
                         for name, clf in run_pipes.items():
+
+                            if _carbonfootprint:
+                                # Initialize CodeCarbon
+                                tracker = EmissionsTracker(save_to_file=False, log_level="error")
+                                tracker.start()
+
+                            cvclf = clone(clf)
+
+                            inner_cv = StratifiedKFold(3, shuffle=True, random_state=self.random_state)
+
+                            # Create folder for grid search results
+                            name_grid = create_save_path(
+                                self.hdf5_path,
+                                dataset.code,
+                                subject,
+                                session,
+                                name,
+                                grid=True,
+                                eval_type="WithinSession",
+                            )
+
+                            # Implement Grid Search
+                            grid_clf = self._grid_search(
+                                param_grid, name_grid, name, cvclf, X_train, y_train, inner_cv, nested=nested
+                            )
+
                             res = {
                                 "dataset": dataset,
                                 "subject": subject,
@@ -554,13 +534,22 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 res["score"] = np.nan
                             else:
                                 res["score"], res["time"] = self.score_explicit(
-                                    deepcopy(clf), X_train, y_train, X_test, y_test
+                                    grid_clf, X_train, y_train, X_test, y_test
                                 )
+
+                            if _carbonfootprint:
+                                emissions = tracker.stop()
+                                if emissions is None:
+                                    emissions = np.NaN
+
+                            if _carbonfootprint:
+                                res["carbon_emission"] = (1000 * emissions,)
+
                             yield res
 
     def evaluate(self, dataset, pipelines, param_grid, nested, takens):
         if self.calculate_learning_curve:
-            yield from self._evaluate_learning_curve(dataset, pipelines)
+            yield from self._evaluate_learning_curve(dataset, pipelines, param_grid, nested)
         else:
             yield from self._evaluate(dataset, pipelines, param_grid, nested, takens)
 
@@ -676,9 +665,6 @@ class CrossSessionEvaluation(BaseEvaluation):
             y = y if self.mne_labels else le.fit_transform(y)
             groups = metadata.session.values
             scorer = get_scorer(self.paradigm.scoring)
-            scorer_precision = get_scorer("precision_macro")
-            scorer_recall = get_scorer("recall_macro")
-            scorer_f1 = get_scorer("f1_macro")
 
             for name, clf in run_pipes.items():
                 if _carbonfootprint:
@@ -728,21 +714,17 @@ class CrossSessionEvaluation(BaseEvaluation):
                             cvclf.fit(X[train], y[train])
                             model_list.append(cvclf)
                             score = scorer(cvclf, X[test], y[test])
-                            precision = scorer_precision(cvclf, X[test], y[test])
-                            recall = scorer_recall(cvclf, X[test], y[test])
-                            f1 = scorer_f1(cvclf, X[test], y[test])
 
                             if self.hdf5_path is not None:
                                 save_model_cv(
                                     model=cvclf, save_path=model_save_path, cv_index=str(cv_ind)
                                 )
                         else:
-                            score_dic = {"score": scorer, "precision": scorer_precision, "recall": scorer_recall, "f1": scorer_f1}
                             result = _fit_and_score(
                                 clone(grid_clf),
                                 X,
                                 y,
-                                score_dic,
+                                scorer,
                                 train,
                                 test,
                                 verbose=False,
@@ -751,10 +733,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                                 error_score=self.error_score,
                                 return_estimator=True,
                             )
-                            score = result["test_scores"]["score"]
-                            precision = result["test_scores"]["precision"]
-                            recall = result["test_scores"]["recall"]
-                            f1 = result["test_scores"]["f1"]
+                            score = result["test_scores"]
                             model_list = result["estimator"]
                         if _carbonfootprint:
                             emissions = tracker.stop()
@@ -774,9 +753,6 @@ class CrossSessionEvaluation(BaseEvaluation):
                             "subject": subject,
                             "session": groups[test][0],
                             "score": score,
-                            "score_precision": precision,
-                            "score_recall": recall,
-                            "score_f1": f1,
                             "n_samples": len(train),
                             "n_channels": nchan,
                             "pipeline": name,
@@ -789,9 +765,6 @@ class CrossSessionEvaluation(BaseEvaluation):
                 else:
                     grid_clf = deepcopy(clf)
                     scorer = get_scorer(self.paradigm.scoring)
-                    scorer_precision = get_scorer("precision_macro")
-                    scorer_recall = get_scorer("recall_macro")
-                    scorer_f1 = get_scorer("f1_macro")
 
                     if self.hdf5_path is not None:
                         model_save_path = create_save_path(
@@ -812,9 +785,6 @@ class CrossSessionEvaluation(BaseEvaluation):
                             grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
-                            precision = scorer_precision(grid_clf, X[test], y[test])
-                            recall = scorer_recall(grid_clf, X[test], y[test])
-                            f1 = scorer_f1(grid_clf, X[test], y[test])
 
                         elif takens == "MDOP":
                             order, lag = Takens.MDOP(X[train])
@@ -823,9 +793,6 @@ class CrossSessionEvaluation(BaseEvaluation):
                             grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
-                            precision = scorer_precision(grid_clf, X[test], y[test])
-                            recall = scorer_recall(grid_clf, X[test], y[test])
-                            f1 = scorer_f1(grid_clf, X[test], y[test])
 
                         if self.hdf5_path is not None:
                             save_model_cv(
@@ -845,9 +812,6 @@ class CrossSessionEvaluation(BaseEvaluation):
                             "subject": subject,
                             "session": groups[test][0],
                             "score": score,
-                            "score_precision": precision,
-                            "score_recall": recall,
-                            "score_f1": f1,
                             "n_samples": len(train),
                             "n_channels": nchan,
                             "pipeline": name,
