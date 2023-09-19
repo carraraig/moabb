@@ -434,7 +434,7 @@ class WithinSessionEvaluation(BaseEvaluation):
         duration = time() - t_start
         return score, duration
 
-    def _evaluate_learning_curve(self, dataset, pipelines, param_grid, nested):
+    def _evaluate_learning_curve(self, dataset, pipelines, param_grid, nested, takens):
         # Progressbar at subject level
         for subject in tqdm(dataset.subject_list, desc=f"{dataset.code}-WithinSession"):
             # check if we already have result for this subject/pipeline
@@ -500,56 +500,103 @@ class WithinSessionEvaluation(BaseEvaluation):
 
                             cvclf = clone(clf)
 
-                            inner_cv = StratifiedKFold(3, shuffle=True, random_state=self.random_state)
+                            if not takens:
 
-                            # Create folder for grid search results
-                            name_grid = create_save_path(
-                                self.hdf5_path,
-                                dataset.code,
-                                subject,
-                                session,
-                                name,
-                                grid=True,
-                                eval_type="WithinSession",
-                            )
+                                inner_cv = StratifiedKFold(3, shuffle=True, random_state=self.random_state)
 
-                            # Implement Grid Search
-                            grid_clf = self._grid_search(
-                                param_grid, name_grid, name, cvclf, X_train, y_train, inner_cv, nested=nested
-                            )
-
-                            res = {
-                                "dataset": dataset,
-                                "subject": subject,
-                                "session": session,
-                                "n_samples": len(y_train),
-                                "n_channels": nchan,
-                                "pipeline": name,
-                                # Additional columns
-                                "data_size": len(subset_indices),
-                                "permutation": perm_i + 1,
-                            }
-                            if not_enough_data:
-                                res["time"] = 0
-                                res["score"] = np.nan
-                            else:
-                                res["score"], res["time"] = self.score_explicit(
-                                    grid_clf, X_train, y_train, X_test, y_test
+                                # Create folder for grid search results
+                                name_grid = create_save_path(
+                                    self.hdf5_path,
+                                    dataset.code,
+                                    subject,
+                                    session,
+                                    name,
+                                    grid=True,
+                                    eval_type="WithinSession",
                                 )
 
-                            if _carbonfootprint:
-                                emissions = tracker.stop()
-                                if emissions is None:
-                                    emissions = np.NaN
+                                # Implement Grid Search
+                                grid_clf = self._grid_search(
+                                    param_grid, name_grid, name, cvclf, X_train, y_train, inner_cv, nested=nested
+                                )
 
-                            if _carbonfootprint:
-                                res["carbon_emission"] = (1000 * emissions,)
+                                res = {
+                                    "dataset": dataset,
+                                    "subject": subject,
+                                    "session": session,
+                                    "n_samples": len(y_train),
+                                    "n_channels": nchan,
+                                    "pipeline": name,
+                                    # Additional columns
+                                    "data_size": len(subset_indices),
+                                    "permutation": perm_i + 1,
+                                }
+                                if not_enough_data:
+                                    res["time"] = 0
+                                    res["score"] = np.nan
+                                else:
+                                    res["score"], res["time"] = self.score_explicit(
+                                        grid_clf, X_train, y_train, X_test, y_test
+                                    )
 
-                            yield res
+                                if _carbonfootprint:
+                                    emissions = tracker.stop()
+                                    if emissions is None:
+                                        emissions = np.NaN
+
+                                if _carbonfootprint:
+                                    res["carbon_emission"] = (1000 * emissions,)
+
+                                yield res
+
+                            else:
+                                scorer = get_scorer(self.paradigm.scoring)
+                                t_start = time()
+                                if takens == "aFNN":
+                                    order, lag = Takens.aFNN(X_train)
+                                    cvclf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                                    cvclf.fit(X_train, y_train)
+                                    score = scorer(cvclf, X_test, y_test)
+
+                                elif takens == "MDOP":
+                                    order, lag = Takens.MDOP(X_train)
+                                    cvclf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                                    cvclf.fit(X_train, y_train)
+                                    score = scorer(cvclf, X_test, y_test)
+
+                                duration = time() - t_start
+
+                                res = {
+                                    "dataset": dataset,
+                                    "subject": subject,
+                                    "session": session,
+                                    "n_samples": len(y_train),
+                                    "n_channels": nchan,
+                                    "pipeline": name,
+                                    # Additional columns
+                                    "data_size": len(subset_indices),
+                                    "permutation": perm_i + 1,
+                                }
+                                if not_enough_data:
+                                    res["time"] = 0
+                                    res["score"] = np.nan
+                                else:
+                                    res["score"] = score
+                                    res["time"] = duration
+
+                                if _carbonfootprint:
+                                    emissions = tracker.stop()
+                                    if emissions is None:
+                                        emissions = np.NaN
+
+                                if _carbonfootprint:
+                                    res["carbon_emission"] = (1000 * emissions,)
+
+                                yield res
 
     def evaluate(self, dataset, pipelines, param_grid, nested, takens):
         if self.calculate_learning_curve:
-            yield from self._evaluate_learning_curve(dataset, pipelines, param_grid, nested)
+            yield from self._evaluate_learning_curve(dataset, pipelines, param_grid, nested, takens)
         else:
             yield from self._evaluate(dataset, pipelines, param_grid, nested, takens)
 
