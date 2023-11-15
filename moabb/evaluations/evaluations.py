@@ -857,6 +857,18 @@ class CrossSessionEvaluation(BaseEvaluation):
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
 
+                        elif takens == "MDOP_NonUniform":
+                            lag_ = Takens.MDOP_NonUniform(X[train])
+                            lag = [0]
+                            for k in np.arange(1, lag_.shape[0]):
+                                if lag_[k] > 0:
+                                    lag.append(lag_[k])
+                                else:
+                                    break
+                            grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset_NonUniform(lag=lag))
+                            grid_clf.fit(X[train], y[train])
+                            score = scorer(grid_clf, X[test], y[test])
+
                         if self.hdf5_path is not None:
                             save_model_cv(
                                 model=grid_clf, save_path=model_save_path, cv_index=str(cv_ind)
