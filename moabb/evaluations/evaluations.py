@@ -12,7 +12,7 @@ julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compile
 from julia import Pkg
 # Pkg.activate("/home/icarrara/Documents/Project/Takens")
 # Pkg.status()
-Pkg.develop(path="/home/icarrara/Documents/Project/moabb/Takens")
+Pkg.develop(path="/home/icarrara/Documents/Project/Takens")
 # Pkg.status()
 from julia import Takens
 # Pkg.build("Takens")  # Important if you change the package (PUT IT HERE)
