@@ -104,6 +104,39 @@ class AugmentedDataset(BaseEstimator, TransformerMixin):
         return X_fin
 
 
+class AugmentedDataset_NonUniform(BaseEstimator, TransformerMixin):
+    """This transformation allow to create an embedding version of the current dataset using Non Uniform embedding
+
+    References
+    ----------
+    """
+
+    def __init__(self, lag=[0]):
+        self.lag = lag
+        self.order = len(lag)
+
+    def fit(self, X, y):
+        return self
+
+    def transform(self, X):
+        X_fin = []
+
+        for i in np.arange(X.shape[0]):
+            X_p = X[i][:, : -(int(max(self.lag))+1)]
+            X_p = np.concatenate(
+                [X_p]
+                + [
+                    X[i][:, self.lag[k] : -(int(max(self.lag)-(self.lag[k])+1))]
+                    for k in range(1, self.order)
+                ],
+                axis=0,
+            )
+            X_fin.append(X_p)
+        X_fin = np.array(X_fin)
+
+        return X_fin
+
+
 class StandardScaler_Epoch(BaseEstimator, TransformerMixin):
     """
     Function to standardize the X raw data for the DeepLearning Method

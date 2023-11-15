@@ -10,9 +10,13 @@ import julia
 julia.install("/home/icarrara/Documents/Programm/Julia/bin/julia")
 julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compiled_modules=False)
 from julia import Pkg
-Pkg.activate("/home/icarrara/Documents/Project/Takens")
+# Pkg.activate("/home/icarrara/Documents/Project/Takens")
+# Pkg.status()
+Pkg.develop(path="/home/icarrara/Documents/Project/moabb/Takens")
+# Pkg.status()
 from julia import Takens
-from moabb.pipelines.features import AugmentedDataset
+# Pkg.build("Takens")  # Important if you change the package (PUT IT HERE)
+from moabb.pipelines.features import AugmentedDataset, AugmentedDataset_NonUniform
 
 import joblib
 import numpy as np
@@ -346,6 +350,18 @@ class WithinSessionEvaluation(BaseEvaluation):
                             elif takens == "MDOP":
                                 order, lag = Takens.MDOP(X_[train])
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                                grid_clf.fit(X_[train], y_[train])
+                                acc.append(scorer(grid_clf, X_[test], y_[test]))
+
+                            elif takens == "MDOP_NonUniform":
+                                lag_ = Takens.MDOP_NonUniform(X_[train])
+                                lag = [0]
+                                for k in np.arange(1, lag_.shape[0]):
+                                    if lag_[k] > 0:
+                                        lag.append(lag_[k])
+                                    else:
+                                        break
+                                grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset_NonUniform(lag=lag))
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
 
