@@ -366,7 +366,8 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
 
                             elif takens == "MDOP_NonUniform_MNE":
-                                lag = Takens.MDOP_NonUniform_MNE(X_[train])
+                                epochs_data = np.concatenate(X_[train].get_data(), axis=1)
+                                lag = Takens.MDOP_NonUniform_MNE(epochs_data)
                                 grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset_NonUniform(lag=lag))
                                 data_train = X_[train].get_data()
                                 data_test = X_[test].get_data()
