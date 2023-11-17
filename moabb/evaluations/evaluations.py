@@ -365,6 +365,14 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
 
+                            elif takens == "MDOP_NonUniform_MNE":
+                                lag = Takens.MDOP_NonUniform_MNE(X_[train])
+                                grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset_NonUniform(lag=lag))
+                                data_train = X_[train].get_data()
+                                data_test = X_[test].get_data()
+                                grid_clf.fit(data_train, y_[train])
+                                acc.append(scorer(grid_clf, data_test, y_[test]))
+
                             if self.hdf5_path is not None:
                                 save_model_cv(
                                     model=grid_clf, save_path=model_save_path, cv_index=cv_ind,
