@@ -12,7 +12,7 @@ julia.Julia(runtime="/home/icarrara/Documents/Programm/Julia/bin/julia", compile
 from julia import Pkg
 Pkg.activate("/home/icarrara/Documents/Project/Takens")
 from julia import Takens
-from moabb.pipelines.features import AugmentedDataset
+from moabb.pipelines.siegel import SiegelCoefficient
 
 import joblib
 import numpy as np
@@ -337,15 +337,10 @@ class WithinSessionEvaluation(BaseEvaluation):
                             )
 
                         for cv_ind, (train, test) in enumerate(cv.split(X_, y_)):
-                            if takens == "aFNN":
-                                order, lag = Takens.aFNN(X_[train])
-                                grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
-                                grid_clf.fit(X_[train], y_[train])
-                                acc.append(scorer(grid_clf, X_[test], y_[test]))
-
-                            elif takens == "MDOP":
+                            if takens == "MDOP":
                                 order, lag = Takens.MDOP(X_[train])
-                                grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                                grid_clf.steps[0][1].order = order
+                                grid_clf.steps[0][1].lag = lag
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
 
@@ -552,15 +547,10 @@ class WithinSessionEvaluation(BaseEvaluation):
                             else:
                                 scorer = get_scorer(self.paradigm.scoring)
                                 t_start = time()
-                                if takens == "aFNN":
-                                    order, lag = Takens.aFNN(X_train)
-                                    cvclf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
-                                    cvclf.fit(X_train, y_train)
-                                    score = scorer(cvclf, X_test, y_test)
-
-                                elif takens == "MDOP":
+                                if takens == "MDOP":
                                     order, lag = Takens.MDOP(X_train)
-                                    cvclf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                                    grid_clf.steps[0][1].order = order
+                                    grid_clf.steps[0][1].lag = lag
                                     cvclf.fit(X_train, y_train)
                                     score = scorer(cvclf, X_test, y_test)
 
@@ -825,19 +815,10 @@ class CrossSessionEvaluation(BaseEvaluation):
                         )
 
                     for cv_ind, (train, test) in enumerate(cv.split(X, y, groups)):
-                        if takens == "aFNN":
-                            order, lag = Takens.aFNN(X[train])
-                            print("Order: ", order)
-                            print("Lag: ", lag)
-                            grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
-                            grid_clf.fit(X[train], y[train])
-                            score = scorer(grid_clf, X[test], y[test])
-
-                        elif takens == "MDOP":
+                        if takens == "MDOP":
                             order, lag = Takens.MDOP(X[train])
-                            print("Order: ", order)
-                            print("Lag: ", lag)
-                            grid_clf.steps[0] = ("augmenteddataset", AugmentedDataset(order=order, lag=lag))
+                            grid_clf.steps[0][1].order = order
+                            grid_clf.steps[0][1].lag = lag
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
 
