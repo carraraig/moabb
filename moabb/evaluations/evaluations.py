@@ -245,7 +245,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                             param_grid, name_grid, name, grid_clf, X_, y_, cv, nested=nested
                         )
 
-                        if self.hdf5_path is not None:
+                        if self.hdf5_path is not None and self.save_model:
                             model_save_path = create_save_path(
                                 self.hdf5_path,
                                 dataset.code,
@@ -266,7 +266,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 cvclf.fit(X_[train], y_[train])
                                 acc.append(scorer(cvclf, X_[test], y_[test]))
 
-                                if self.hdf5_path is not None:
+                                if self.hdf5_path is not None and self.save_model:
                                     save_model_cv(
                                         model=cvclf, save_path=model_save_path, cv_index=cv_ind
                                     )
@@ -286,7 +286,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 return_estimator=True,
                             )
                             score = results["test_score"].mean()
-                            if self.hdf5_path is not None:
+                            if self.hdf5_path is not None and self.save_model:
                                 save_model_list(
                                         results["estimator"],
                                         score_list=score,
@@ -325,7 +325,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                         scorer = get_scorer(self.paradigm.scoring)
                         acc = list()
 
-                        if self.hdf5_path is not None:
+                        if self.hdf5_path is not None and self.save_model:
                             model_save_path = create_save_path(
                                 self.hdf5_path,
                                 dataset.code,
@@ -344,7 +344,7 @@ class WithinSessionEvaluation(BaseEvaluation):
                                 grid_clf.fit(X_[train], y_[train])
                                 acc.append(scorer(grid_clf, X_[test], y_[test]))
 
-                            if self.hdf5_path is not None:
+                            if self.hdf5_path is not None and self.save_model:
                                 save_model_cv(
                                     model=grid_clf, save_path=model_save_path, cv_index=cv_ind,
                                 )
@@ -733,7 +733,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                         param_grid, name_grid, name, grid_clf, X, y, cv, groups, nested=nested
                     )
 
-                    if self.hdf5_path is not None:
+                    if self.hdf5_path is not None and self.save_model:
                         model_save_path = create_save_path(
                             hdf5_path=self.hdf5_path,
                             code=dataset.code,
@@ -752,7 +752,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                             model_list.append(cvclf)
                             score = scorer(cvclf, X[test], y[test])
 
-                            if self.hdf5_path is not None:
+                            if self.hdf5_path is not None and self.save_model:
                                 save_model_cv(
                                     model=cvclf, save_path=model_save_path, cv_index=str(cv_ind)
                                 )
@@ -778,7 +778,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                                 emissions = 0
 
                         duration = time() - t_start
-                        if self.hdf5_path is not None:
+                        if self.hdf5_path is not None and self.save_model:
                             save_model_list(
                                 model_list=model_list, score_list=score, save_path=model_save_path
                             )
@@ -803,7 +803,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                     grid_clf = deepcopy(clf)
                     scorer = get_scorer(self.paradigm.scoring)
 
-                    if self.hdf5_path is not None:
+                    if self.hdf5_path is not None and self.save_model:
                         model_save_path = create_save_path(
                             hdf5_path=self.hdf5_path,
                             code=dataset.code,
@@ -822,7 +822,7 @@ class CrossSessionEvaluation(BaseEvaluation):
                             grid_clf.fit(X[train], y[train])
                             score = scorer(grid_clf, X[test], y[test])
 
-                        if self.hdf5_path is not None:
+                        if self.hdf5_path is not None and self.save_model:
                             save_model_cv(
                                 model=grid_clf, save_path=model_save_path, cv_index=str(cv_ind)
                             )
