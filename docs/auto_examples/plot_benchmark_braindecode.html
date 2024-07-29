@@ -1,0 +1,1605 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <link rel="moabb icon" sizes="180x180" href="../_static/moabb_logo.png" type="image/png">
+    <title>Benchmarking on MOABB with Braindecode (PyTorch) deep net architectures &#8212; moabb 1.1.0-dev documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-2.0.4/b-3.0.2/b-html5-3.0.2/datatables.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-5WJBKDMSTE"></script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-5WJBKDMSTE');
+            </script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/plot_benchmark_braindecode';</script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/v/dt/dt-2.0.4/b-3.0.2/b-html5-3.0.2/datatables.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Benchmarking with MOABB with Grid Search" href="plot_benchmark_grid_search.html" />
+    <link rel="prev" title="Benchmarking on MOABB with Tensorflow deep net architectures" href="plot_benchmark_DL.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+
+<script>
+document.write(`<div class="bd-header-announcement"></div>`);
+fetch("https://raw.githubusercontent.com/NeuroTechX/moabb/develop/docs/source/_templates/custom-template.html")
+  .then(res => {return res.text();})
+  .then(data => {
+    div = document.querySelector(".bd-header-announcement");
+    div.classList.add(...["bd-header-announcement", "container-fluid"]);
+    div.innerHTML = `<div class="bd-header-announcement__content">${data}</div>`;
+  })
+  .catch(error => {
+    console.log("[PST]: Failed to load announcement at: https://raw.githubusercontent.com/NeuroTechX/moabb/develop/docs/source/_templates/custom-template.html");
+  });
+</script>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/moabb_logo.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../_static/moabb_logo.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../paper_results.html">
+                        The largest EEG benchmark
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../dataset_summary.html">
+                        Datasets
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../install/install.html">
+                        Install
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../overview.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../auto_tutorials/index.html">
+                        Getting Started
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="index.html">
+                        Gallery
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../main_concepts.html">
+                        How does Moabb work?
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../api.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../whats_new.html">
+                        Release notes
+                      </a>
+                    </li>
+                
+                </div>
+            </div>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../paper_results.html">
+                        The largest EEG benchmark
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../dataset_summary.html">
+                        Datasets
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../install/install.html">
+                        Install
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../overview.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../auto_tutorials/index.html">
+                        Getting Started
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="index.html">
+                        Gallery
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../main_concepts.html">
+                        How does Moabb work?
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../api.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../whats_new.html">
+                        Release notes
+                      </a>
+                    </li>
+                
+                </div>
+            </div>
+            
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../auto_tutorials/index.html">Getting Started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../auto_tutorials/4_adding_a_dataset.html">Tutorial 4: Creating a dataset class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_tutorials/noplot_tutorial_5_build_a_custom_dataset.html">Tutorial 5: Creating a dataset class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_tutorials/plot_Getting_Started.html">Tutorial 0: Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_tutorials/tutorial_1_simple_example_motor_imagery.html">Tutorial 1: Simple Motor Imagery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_tutorials/tutorial_2_using_mulitple_datasets.html">Tutorial 2: Using multiple datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_tutorials/tutorial_3_benchmarking_multiple_pipelines.html">Tutorial 3: Benchmarking multiple pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Examples</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="changing_download_directory.html">Change Download Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_codecarbon.html">Benchmarking with MOABB showing the CO2 footprint</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load_model.html">Load Model (Scikit, Pytorch, Keras) with MOABB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noplot_bids_conversion.html">Convert a MOABB dataset to BIDS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noplot_phmd_ml_spectrum.html">Spectral analysis of the trials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noplot_vr_pc_p300_different_epoch_size.html">Changing epoch size in P300 VR dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_Hinss2021_classification.html">Hinss2021 classification example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_benchmark.html">Examples of how to use MOABB to benchmark pipelines.</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="plot_benchmark_DL.html">Benchmarking on MOABB with Tensorflow deep net architectures</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Benchmarking on MOABB with Braindecode (PyTorch) deep net architectures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_benchmark_grid_search.html">Benchmarking with MOABB with Grid Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_braindecode.html">Cross-session motor imagery with deep learning EEGNet v4 model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cross_session_motor_imagery.html">Cross-Session Motor Imagery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cross_session_multiple_datasets.html">Cross-Session on Multiple Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cross_subject_ssvep.html">Cross-Subject SSVEP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_disk_cache.html">Cache on disk intermediate data processing states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_explore_paradigm.html">Explore Paradigm Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_fixed_interval_windows.html">Fixed interval windows processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_within_session_p300.html">Within Session P300</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_within_session_ssvep.html">Within Session SSVEP</a></li>
+</ul>
+</li>
+
+
+
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.AlexMI.html">moabb.datasets.AlexMI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BNCI2014_001.html">moabb.datasets.BNCI2014_001</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BNCI2014_002.html">moabb.datasets.BNCI2014_002</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BNCI2014_004.html">moabb.datasets.BNCI2014_004</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BNCI2015_001.html">moabb.datasets.BNCI2015_001</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BNCI2015_004.html">moabb.datasets.BNCI2015_004</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Cho2017.html">moabb.datasets.Cho2017</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Lee2019_MI.html">moabb.datasets.Lee2019_MI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.GrosseWentrup2009.html">moabb.datasets.GrosseWentrup2009</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Ofner2017.html">moabb.datasets.Ofner2017</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.PhysionetMI.html">moabb.datasets.PhysionetMI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Schirrmeister2017.html">moabb.datasets.Schirrmeister2017</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Shin2017A.html">moabb.datasets.Shin2017A</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Shin2017B.html">moabb.datasets.Shin2017B</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Weibo2014.html">moabb.datasets.Weibo2014</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Zhou2016.html">moabb.datasets.Zhou2016</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Stieger2021.html">moabb.datasets.Stieger2021</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Liu2024.html">moabb.datasets.Liu2024</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BI2012.html">moabb.datasets.BI2012</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BI2013a.html">moabb.datasets.BI2013a</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BI2014a.html">moabb.datasets.BI2014a</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BI2014b.html">moabb.datasets.BI2014b</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BI2015a.html">moabb.datasets.BI2015a</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BI2015b.html">moabb.datasets.BI2015b</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Cattan2019_VR.html">moabb.datasets.Cattan2019_VR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BNCI2014_008.html">moabb.datasets.BNCI2014_008</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BNCI2014_009.html">moabb.datasets.BNCI2014_009</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.BNCI2015_003.html">moabb.datasets.BNCI2015_003</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.DemonsP300.html">moabb.datasets.DemonsP300</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.EPFLP300.html">moabb.datasets.EPFLP300</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Huebner2017.html">moabb.datasets.Huebner2017</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Huebner2018.html">moabb.datasets.Huebner2018</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Lee2019_ERP.html">moabb.datasets.Lee2019_ERP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Sosulski2019.html">moabb.datasets.Sosulski2019</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Kalunga2016.html">moabb.datasets.Kalunga2016</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Nakanishi2015.html">moabb.datasets.Nakanishi2015</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Wang2016.html">moabb.datasets.Wang2016</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.MAMEM1.html">moabb.datasets.MAMEM1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.MAMEM2.html">moabb.datasets.MAMEM2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.MAMEM3.html">moabb.datasets.MAMEM3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Lee2019_SSVEP.html">moabb.datasets.Lee2019_SSVEP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Thielen2015.html">moabb.datasets.Thielen2015</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Thielen2021.html">moabb.datasets.Thielen2021</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.CastillosBurstVEP40.html">moabb.datasets.CastillosBurstVEP40</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.CastillosBurstVEP100.html">moabb.datasets.CastillosBurstVEP100</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.CastillosCVEP40.html">moabb.datasets.CastillosCVEP40</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.CastillosCVEP100.html">moabb.datasets.CastillosCVEP100</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Cattan2019_PHMD.html">moabb.datasets.Cattan2019_PHMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Hinss2021.html">moabb.datasets.Hinss2021</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.Rodrigues2017.html">moabb.datasets.Rodrigues2017</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.base.BaseDataset.html">moabb.datasets.base.BaseDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.base.CacheConfig.html">moabb.datasets.base.CacheConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.fake.FakeDataset.html">moabb.datasets.fake.FakeDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.fake.FakeVirtualRealityDataset.html">moabb.datasets.fake.FakeVirtualRealityDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.download.data_path.html">moabb.datasets.download.data_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.download.data_dl.html">moabb.datasets.download.data_dl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.download.fs_issue_request.html">moabb.datasets.download.fs_issue_request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.download.fs_get_file_list.html">moabb.datasets.download.fs_get_file_list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.download.fs_get_file_hash.html">moabb.datasets.download.fs_get_file_hash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.download.fs_get_file_id.html">moabb.datasets.download.fs_get_file_id</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.download.fs_get_file_name.html">moabb.datasets.download.fs_get_file_name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.utils.dataset_search.html">moabb.datasets.utils.dataset_search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.utils.find_intersecting_channels.html">moabb.datasets.utils.find_intersecting_channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.compound_dataset.BI2014a_Il.html">moabb.datasets.compound_dataset.BI2014a_Il</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.compound_dataset.BI2014b_Il.html">moabb.datasets.compound_dataset.BI2014b_Il</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.compound_dataset.BI2015a_Il.html">moabb.datasets.compound_dataset.BI2015a_Il</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.compound_dataset.BI2015b_Il.html">moabb.datasets.compound_dataset.BI2015b_Il</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.compound_dataset.Cattan2019_VR_Il.html">moabb.datasets.compound_dataset.Cattan2019_VR_Il</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.datasets.compound_dataset.BI_Il.html">moabb.datasets.compound_dataset.BI_Il</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.evaluations.WithinSessionEvaluation.html">moabb.evaluations.WithinSessionEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.evaluations.CrossSessionEvaluation.html">moabb.evaluations.CrossSessionEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.evaluations.CrossSubjectEvaluation.html">moabb.evaluations.CrossSubjectEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.evaluations.base.BaseEvaluation.html">moabb.evaluations.base.BaseEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.MotorImagery.html">moabb.paradigms.MotorImagery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.LeftRightImagery.html">moabb.paradigms.LeftRightImagery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.FilterBankLeftRightImagery.html">moabb.paradigms.FilterBankLeftRightImagery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.FilterBankMotorImagery.html">moabb.paradigms.FilterBankMotorImagery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.SinglePass.html">moabb.paradigms.SinglePass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.P300.html">moabb.paradigms.P300</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.SSVEP.html">moabb.paradigms.SSVEP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.FilterBankSSVEP.html">moabb.paradigms.FilterBankSSVEP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.CVEP.html">moabb.paradigms.CVEP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.FilterBankCVEP.html">moabb.paradigms.FilterBankCVEP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.RestingStateToP300Adapter.html">moabb.paradigms.RestingStateToP300Adapter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.FixedIntervalWindowsProcessing.html">moabb.paradigms.FixedIntervalWindowsProcessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.FilterBankFixedIntervalWindowsProcessing.html">moabb.paradigms.FilterBankFixedIntervalWindowsProcessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.motor_imagery.BaseMotorImagery.html">moabb.paradigms.motor_imagery.BaseMotorImagery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.motor_imagery.SinglePass.html">moabb.paradigms.motor_imagery.SinglePass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.motor_imagery.FilterBank.html">moabb.paradigms.motor_imagery.FilterBank</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.p300.BaseP300.html">moabb.paradigms.p300.BaseP300</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.ssvep.BaseSSVEP.html">moabb.paradigms.ssvep.BaseSSVEP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.BaseFixedIntervalWindowsProcessing.html">moabb.paradigms.BaseFixedIntervalWindowsProcessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.base.BaseParadigm.html">moabb.paradigms.base.BaseParadigm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.paradigms.base.BaseProcessing.html">moabb.paradigms.base.BaseProcessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.features.LogVariance.html">moabb.pipelines.features.LogVariance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.features.FM.html">moabb.pipelines.features.FM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.features.ExtendedSSVEPSignal.html">moabb.pipelines.features.ExtendedSSVEPSignal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.features.AugmentedDataset.html">moabb.pipelines.features.AugmentedDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.features.StandardScaler_Epoch.html">moabb.pipelines.features.StandardScaler_Epoch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.csp.TRCSP.html">moabb.pipelines.csp.TRCSP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.classification.SSVEP_CCA.html">moabb.pipelines.classification.SSVEP_CCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.classification.SSVEP_TRCA.html">moabb.pipelines.classification.SSVEP_TRCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.classification.SSVEP_MsetCCA.html">moabb.pipelines.classification.SSVEP_MsetCCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.deep_learning.KerasDeepConvNet.html">moabb.pipelines.deep_learning.KerasDeepConvNet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.deep_learning.KerasEEGITNet.html">moabb.pipelines.deep_learning.KerasEEGITNet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.deep_learning.KerasEEGNet_8_2.html">moabb.pipelines.deep_learning.KerasEEGNet_8_2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.deep_learning.KerasEEGNeX.html">moabb.pipelines.deep_learning.KerasEEGNeX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.deep_learning.KerasEEGTCNet.html">moabb.pipelines.deep_learning.KerasEEGTCNet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.deep_learning.KerasShallowConvNet.html">moabb.pipelines.deep_learning.KerasShallowConvNet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.utils.create_pipeline_from_config.html">moabb.pipelines.utils.create_pipeline_from_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.utils.FilterBank.html">moabb.pipelines.utils.FilterBank</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.utils_deep_model.EEGNet.html">moabb.pipelines.utils_deep_model.EEGNet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.utils_deep_model.EEGNet_TC.html">moabb.pipelines.utils_deep_model.EEGNet_TC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.utils_deep_model.TCN_block.html">moabb.pipelines.utils_deep_model.TCN_block</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.utils_pytorch.BraindecodeDatasetLoader.html">moabb.pipelines.utils_pytorch.BraindecodeDatasetLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.pipelines.utils_pytorch.InputShapeSetterEEG.html">moabb.pipelines.utils_pytorch.InputShapeSetterEEG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.plotting.score_plot.html">moabb.analysis.plotting.score_plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.plotting.paired_plot.html">moabb.analysis.plotting.paired_plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.plotting.summary_plot.html">moabb.analysis.plotting.summary_plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.plotting.meta_analysis_plot.html">moabb.analysis.plotting.meta_analysis_plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.meta_analysis.find_significant_differences.html">moabb.analysis.meta_analysis.find_significant_differences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.meta_analysis.compute_dataset_statistics.html">moabb.analysis.meta_analysis.compute_dataset_statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.meta_analysis.combine_effects.html">moabb.analysis.meta_analysis.combine_effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.meta_analysis.combine_pvalues.html">moabb.analysis.meta_analysis.combine_pvalues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.analysis.meta_analysis.collapse_session_scores.html">moabb.analysis.meta_analysis.collapse_session_scores</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.benchmark.html">moabb.benchmark</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.set_log_level.html">moabb.set_log_level</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.setup_seed.html">moabb.setup_seed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.set_download_dir.html">moabb.set_download_dir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/moabb.make_process_pipelines.html">moabb.make_process_pipelines</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../overview.html" class="nav-link">Documentation overview</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Benchmarking on MOABB with Braindecode (PyTorch) deep net architectures</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-plot-benchmark-braindecode-py"><span class="std std-ref">here</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="benchmarking-on-moabb-with-braindecode-pytorch-deep-net-architectures">
+<span id="sphx-glr-auto-examples-plot-benchmark-braindecode-py"></span><h1>Benchmarking on MOABB with Braindecode (PyTorch) deep net architectures<a class="headerlink" href="#benchmarking-on-moabb-with-braindecode-pytorch-deep-net-architectures" title="Permalink to this heading">#</a></h1>
+<p>This example shows how to use MOABB to benchmark a set of Braindecode pipelines (deep learning
+architectures) on all available datasets.
+For this example, we will use only 2 datasets to keep the computation time low, but this benchmark is designed
+to easily scale to many datasets.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Authors: Igor Carrara &lt;igor.carrara@inria.fr&gt;</span>
+<span class="c1">#          Bruno Aristimunha &lt;b.aristimunha@gmail.com&gt;</span>
+<span class="c1">#          Sylvain Chevallier &lt;sylvain.chevallier@universite-paris-saclay.fr&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: BSD (3-clause)</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">absl.logging</span> <span class="kn">import</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ERROR</span></a><span class="p">,</span> <span class="n">set_verbosity</span>
+
+<span class="kn">from</span> <span class="nn">moabb</span> <span class="kn">import</span> <a href="../generated/moabb.benchmark.html#moabb.benchmark" title="moabb.benchmark" class="sphx-glr-backref-module-moabb sphx-glr-backref-type-py-function"><span class="n">benchmark</span></a><span class="p">,</span> <a href="../generated/moabb.set_log_level.html#moabb.set_log_level" title="moabb.set_log_level" class="sphx-glr-backref-module-moabb sphx-glr-backref-type-py-function"><span class="n">set_log_level</span></a>
+<span class="kn">from</span> <span class="nn">moabb.analysis.plotting</span> <span class="kn">import</span> <a href="../generated/moabb.analysis.plotting.score_plot.html#moabb.analysis.plotting.score_plot" title="moabb.analysis.plotting.score_plot" class="sphx-glr-backref-module-moabb-analysis-plotting sphx-glr-backref-type-py-function"><span class="n">score_plot</span></a>
+<span class="kn">from</span> <span class="nn">moabb.datasets</span> <span class="kn">import</span> <a href="../generated/moabb.datasets.BNCI2014_001.html#moabb.datasets.BNCI2014_001" title="moabb.datasets.BNCI2014_001" class="sphx-glr-backref-module-moabb-datasets sphx-glr-backref-type-py-class"><span class="n">BNCI2014_001</span></a><span class="p">,</span> <a href="../generated/moabb.datasets.BNCI2014_004.html#moabb.datasets.BNCI2014_004" title="moabb.datasets.BNCI2014_004" class="sphx-glr-backref-module-moabb-datasets sphx-glr-backref-type-py-class"><span class="n">BNCI2014_004</span></a>
+<span class="kn">from</span> <span class="nn">moabb.utils</span> <span class="kn">import</span> <a href="../generated/moabb.setup_seed.html#moabb.setup_seed" title="moabb.setup_seed" class="sphx-glr-backref-module-moabb sphx-glr-backref-type-py-function"><span class="n">setup_seed</span></a>
+
+
+<a href="../generated/moabb.set_log_level.html#moabb.set_log_level" title="moabb.set_log_level" class="sphx-glr-backref-module-moabb sphx-glr-backref-type-py-function"><span class="n">set_log_level</span></a><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">)</span>
+<span class="c1"># Avoid output Warning</span>
+<span class="n">set_verbosity</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ERROR</span></a><span class="p">)</span>
+<a href="https://docs.python.org/3/library/os.html#os.environ" title="os.environ" class="sphx-glr-backref-module-os sphx-glr-backref-type-py-data"><span class="n">os</span><span class="o">.</span><span class="n">environ</span></a><span class="p">[</span><span class="s2">&quot;TF_CPP_MIN_LOG_LEVEL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;3&quot;</span>
+
+<span class="c1"># Print Information PyTorch</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Torch Version: </span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Set up GPU if it is there</span>
+<a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">cuda</span></a> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.cuda.is_available.html#torch.cuda.is_available" title="torch.cuda.is_available" class="sphx-glr-backref-module-torch-cuda sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span></a><span class="p">()</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">cuda</span></a> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;GPU is&quot;</span><span class="p">,</span> <span class="s2">&quot;AVAILABLE&quot;</span> <span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">cuda</span></a> <span class="k">else</span> <span class="s2">&quot;NOT AVAILABLE&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Torch Version: 1.13.1+cu117
+GPU is NOT AVAILABLE
+</pre></div>
+</div>
+<p>In this example, we will use only 2 subjects from the dataset <code class="docutils literal notranslate"><span class="pre">BNCI2014_001</span></code> and <code class="docutils literal notranslate"><span class="pre">BNCI2014_004</span></code>.</p>
+<section id="running-the-benchmark">
+<h2>Running the benchmark<a class="headerlink" href="#running-the-benchmark" title="Permalink to this heading">#</a></h2>
+<p>The benchmark is run using the <code class="docutils literal notranslate"><span class="pre">benchmark</span></code> function. You need to specify the
+folder containing the pipelines, the kind of evaluation, and the paradigm
+to use. By default, the benchmark will use all available datasets for all
+paradigms listed in the pipelines. You could restrict to specific evaluation and
+paradigm using the <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> and <code class="docutils literal notranslate"><span class="pre">paradigms</span></code> arguments.</p>
+<p>To save computation time, the results are cached. If you want to re-run the
+benchmark, you can set the <code class="docutils literal notranslate"><span class="pre">overwrite</span></code> argument to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>It is possible to indicate the folder to cache the results and the one to save
+the analysis &amp; figures. By default, the results are saved in the <code class="docutils literal notranslate"><span class="pre">results</span></code>
+folder, and the analysis &amp; figures are saved in the <code class="docutils literal notranslate"><span class="pre">benchmark</span></code> folder.</p>
+<p>This code is implemented to run on CPU. If you’re using a GPU, do not use multithreading
+(i.e. set n_jobs=1)</p>
+<p>In order to allow the benchmark function to work with return_epoch=True (Required to use Braindecode(
+we need to call each pipeline as “braindecode_xxx…”, with xxx the name of the model to be
+handled correctly by the benchmark function.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set up reproducibility of Tensorflow</span>
+<a href="../generated/moabb.setup_seed.html#moabb.setup_seed" title="moabb.setup_seed" class="sphx-glr-backref-module-moabb sphx-glr-backref-type-py-function"><span class="n">setup_seed</span></a><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># Restrict this example only to the first two subjects of BNCI2014_001</span>
+<a href="../generated/moabb.datasets.BNCI2014_001.html#moabb.datasets.BNCI2014_001" title="moabb.datasets.BNCI2014_001" class="sphx-glr-backref-module-moabb-datasets sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dataset</span></a> <span class="o">=</span> <a href="../generated/moabb.datasets.BNCI2014_001.html#moabb.datasets.BNCI2014_001" title="moabb.datasets.BNCI2014_001" class="sphx-glr-backref-module-moabb-datasets sphx-glr-backref-type-py-class"><span class="n">BNCI2014_001</span></a><span class="p">()</span>
+<a href="../generated/moabb.datasets.BNCI2014_004.html#moabb.datasets.BNCI2014_004" title="moabb.datasets.BNCI2014_004" class="sphx-glr-backref-module-moabb-datasets sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dataset2</span></a> <span class="o">=</span> <a href="../generated/moabb.datasets.BNCI2014_004.html#moabb.datasets.BNCI2014_004" title="moabb.datasets.BNCI2014_004" class="sphx-glr-backref-module-moabb-datasets sphx-glr-backref-type-py-class"><span class="n">BNCI2014_004</span></a><span class="p">()</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dataset</span><span class="o">.</span><span class="n">subject_list</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dataset</span><span class="o">.</span><span class="n">subject_list</span></a><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dataset2</span><span class="o">.</span><span class="n">subject_list</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dataset2</span><span class="o">.</span><span class="n">subject_list</span></a><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">datasets</span></a> <span class="o">=</span> <span class="p">[</span><a href="../generated/moabb.datasets.BNCI2014_001.html#moabb.datasets.BNCI2014_001" title="moabb.datasets.BNCI2014_001" class="sphx-glr-backref-module-moabb-datasets sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dataset</span></a><span class="p">,</span> <a href="../generated/moabb.datasets.BNCI2014_004.html#moabb.datasets.BNCI2014_004" title="moabb.datasets.BNCI2014_004" class="sphx-glr-backref-module-moabb-datasets sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dataset2</span></a><span class="p">]</span>
+
+<span class="n">results</span> <span class="o">=</span> <a href="../generated/moabb.benchmark.html#moabb.benchmark" title="moabb.benchmark" class="sphx-glr-backref-module-moabb sphx-glr-backref-type-py-function"><span class="n">benchmark</span></a><span class="p">(</span>
+    <span class="n">pipelines</span><span class="o">=</span><span class="s2">&quot;./pipelines_braindecode&quot;</span><span class="p">,</span>
+    <span class="n">evaluations</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CrossSession&quot;</span><span class="p">],</span>
+    <span class="n">paradigms</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;LeftRightImagery&quot;</span><span class="p">],</span>
+    <span class="n">include_datasets</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">datasets</span></a><span class="p">,</span>
+    <span class="n">results</span><span class="o">=</span><span class="s2">&quot;./results/&quot;</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">output</span><span class="o">=</span><span class="s2">&quot;./benchmark/&quot;</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>BNCI2014-001-CrossSession:   0%|          | 0/2 [00:00&lt;?, ?it/s]/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4219        1.1057       0.4483        0.8093  0.3284
+      2       0.4844        0.7672       0.4483        0.8043  0.2832
+      3       0.4531        1.0164       0.4483        0.7982  0.3196
+      4       0.5156        0.8216       0.4483        0.7914  0.2795
+      5       0.5312        0.7809       0.4483        0.7834  0.2814
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.3906        1.0376       0.4828        0.9379  0.2853
+      2       0.5469        0.8678       0.4828        0.9140  0.2777
+      3       0.5156        0.7991       0.4828        0.8924  0.2791
+      4       0.5000        0.8015       0.4483        0.8746  0.3056
+      5       0.5781        0.6971       0.4483        0.8572  0.2780
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/torch/nn/modules/conv.py:459: UserWarning: Using padding=&#39;same&#39; with even kernel lengths and odd dilation may require a zero-padded copy of the input be created (Triggered internally at ../aten/src/ATen/native/Convolution.cpp:895.)
+  return F.conv2d(input, weight, bias, self.stride,
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5000        1.0103       0.6207        0.6733  0.6749
+      2       0.5156        1.1507       0.6207        0.6731  0.6575
+      3       0.5156        1.1217       0.6207        0.6729  0.6195
+      4       0.5000        1.0890       0.6207        0.6728  0.6385
+      5       0.5312        1.1152       0.6207        0.6727  0.5931
+      6       0.4219        1.1447       0.6207        0.6725  0.5934
+      7       0.4531        1.0387       0.6207        0.6724  0.5612
+      8       0.4844        1.1020       0.6207        0.6722  0.5919
+      9       0.5000        1.0496       0.6207        0.6721  0.5792
+     10       0.5156        1.0914       0.6207        0.6719  0.5783
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5156        0.9343       0.5172        0.7090  0.5956
+      2       0.4844        1.1523       0.5172        0.7089  0.5557
+      3       0.5312        0.8622       0.5172        0.7090  0.5871
+      4       0.5000        0.8798       0.5172        0.7087  0.5611
+      5       0.5625        0.9592       0.5172        0.7085  0.6018
+      6       0.4688        1.0367       0.5172        0.7083  0.5558
+      7       0.5000        0.8971       0.5172        0.7082  0.5933
+      8       0.5156        0.9649       0.5172        0.7080  0.5571
+      9       0.5781        0.8972       0.5172        0.7078  0.5726
+     10       0.5312        0.8602       0.5172        0.7077  0.5600
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4844        0.7618       0.5172        0.6963  0.0944
+      2       0.4844        0.7124       0.5172        0.6961  0.0916
+      3       0.5156        0.6955       0.5172        0.6959  0.1165
+      4       0.5469        0.6330       0.5172        0.6957  0.1039
+      5       0.5781        0.7099       0.5172        0.6956  0.0878
+      6       0.5156        0.7090       0.5172        0.6955  0.0874
+      7       0.5469        0.7216       0.5172        0.6954  0.0878
+      8       0.5000        0.7417       0.5172        0.6953  0.0877
+      9       0.5469        0.6988       0.5172        0.6952  0.0877
+     10       0.4531        0.7193       0.5172        0.6951  0.0877
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5312        0.6978       0.5172        0.6989  0.0887
+      2       0.4219        0.7527       0.5172        0.6988  0.0880
+      3       0.4531        0.7355       0.4828        0.6986  0.0876
+      4       0.4531        0.7324       0.4828        0.6985  0.0878
+      5       0.5000        0.7058       0.4828        0.6984  0.0882
+      6       0.4375        0.7245       0.4828        0.6984  0.1086
+      7       0.5000        0.7166       0.4828        0.6983  0.1082
+      8       0.5000        0.7255       0.4828        0.6982  0.0884
+      9       0.3906        0.7600       0.4828        0.6982  0.0957
+     10       0.4375        0.7712       0.4828        0.6981  0.0886
+
+BNCI2014-001-CrossSession:  50%|#####     | 1/2 [00:24&lt;00:24, 24.01s/it]/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  24 events (all good), 2 – 6 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 12
+ &#39;right_hand&#39;: 12&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4844        1.3503       0.4483        1.0187  0.3008
+      2       0.4219        1.5314       0.4483        0.8704  0.2787
+      3       0.3906        1.7422       0.6207        0.7848  0.2787
+      4       0.5156        1.1628       0.5862        0.7522  0.2895
+      5       0.4062        1.1209       0.6207        0.7532  0.2816
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4688        0.9863       0.5517        0.6964  0.2782
+      2       0.5156        0.9354       0.5862        0.6831  0.2970
+      3       0.5469        0.8925       0.6207        0.6734  0.2811
+      4       0.5156        0.9844       0.6207        0.6642  0.2848
+      5       0.5469        0.8695       0.6897        0.6560  0.2763
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5625        0.8672       0.5172        0.7290  0.5594
+      2       0.5312        0.8768       0.5172        0.7298  0.5619
+      3       0.5625        0.9352       0.5172        0.7300  0.5626
+Stopping since valid_loss has not improved in the last 3 epochs.
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5312        0.8994       0.3448        0.7289  0.5955
+      2       0.6250        0.8635       0.3448        0.7290  0.5625
+      3       0.4531        1.1132       0.3793        0.7290  0.6029
+Stopping since valid_loss has not improved in the last 3 epochs.
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4688        0.7502       0.5172        0.7046  0.0940
+      2       0.5156        0.6871       0.5172        0.7037  0.0937
+      3       0.5938        0.7001       0.5172        0.7031  0.0930
+      4       0.6875        0.6264       0.5172        0.7025  0.1190
+      5       0.5938        0.6594       0.5172        0.7021  0.1138
+      6       0.5156        0.7252       0.5172        0.7018  0.0935
+      7       0.5312        0.6832       0.5172        0.7015  0.0933
+      8       0.5312        0.6720       0.5172        0.7012  0.0934
+      9       0.5156        0.6977       0.5172        0.7010  0.0935
+     10       0.5625        0.6846       0.5172        0.7008  0.0929
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5781        0.7174       0.4483        0.7001  0.0935
+      2       0.5469        0.6959       0.4483        0.6998  0.0936
+      3       0.4531        0.7387       0.4483        0.6995  0.0930
+      4       0.5156        0.7132       0.4483        0.6993  0.0933
+      5       0.5000        0.7502       0.4483        0.6991  0.0944
+      6       0.6094        0.6787       0.4483        0.6989  0.1045
+      7       0.6406        0.6399       0.4828        0.6987  0.1276
+      8       0.5625        0.6859       0.4828        0.6985  0.0930
+      9       0.5156        0.7132       0.4828        0.6983  0.0939
+     10       0.4688        0.7281       0.5172        0.6982  0.0927
+
+BNCI2014-001-CrossSession: 100%|##########| 2/2 [00:40&lt;00:00, 19.58s/it]
+BNCI2014-001-CrossSession: 100%|##########| 2/2 [00:40&lt;00:00, 20.24s/it]
+
+BNCI2014-004-CrossSession:   0%|          | 0/2 [00:00&lt;?, ?it/s]/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py:1063: InsecureRequestWarning: Unverified HTTPS request is being made to host &#39;lampx.tugraz.at&#39;. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/1.26.x/advanced-usage.html#ssl-warnings
+  warnings.warn(
+
+
+  0%|                                              | 0.00/34.2M [00:00&lt;?, ?B/s]
+
+  0%|                                      | 32.8k/34.2M [00:00&lt;03:27, 164kB/s]
+
+  0%|                                      | 88.1k/34.2M [00:00&lt;01:44, 326kB/s]
+
+  1%|▏                                      | 201k/34.2M [00:00&lt;00:54, 624kB/s]
+
+  1%|▍                                     | 417k/34.2M [00:00&lt;00:29, 1.16MB/s]
+
+  2%|▉                                     | 849k/34.2M [00:00&lt;00:15, 2.20MB/s]
+
+  5%|█▊                                   | 1.71M/34.2M [00:00&lt;00:07, 4.26MB/s]
+
+ 10%|███▋                                 | 3.45M/34.2M [00:00&lt;00:03, 8.37MB/s]
+
+ 18%|██████▌                              | 6.05M/34.2M [00:00&lt;00:02, 13.8MB/s]
+
+ 24%|████████▊                            | 8.18M/34.2M [00:01&lt;00:01, 16.1MB/s]
+
+ 32%|███████████▊                         | 10.9M/34.2M [00:01&lt;00:01, 19.4MB/s]
+
+ 41%|███████████████                      | 14.0M/34.2M [00:01&lt;00:00, 22.8MB/s]
+
+ 50%|██████████████████▍                  | 17.0M/34.2M [00:01&lt;00:00, 25.2MB/s]
+
+ 58%|█████████████████████▎               | 19.7M/34.2M [00:01&lt;00:00, 25.8MB/s]
+
+ 66%|████████████████████████▍            | 22.6M/34.2M [00:01&lt;00:00, 26.7MB/s]
+
+ 75%|███████████████████████████▋         | 25.6M/34.2M [00:01&lt;00:00, 27.5MB/s]
+
+ 84%|██████████████████████████████▉      | 28.6M/34.2M [00:01&lt;00:00, 28.3MB/s]
+
+ 92%|██████████████████████████████████▏  | 31.6M/34.2M [00:01&lt;00:00, 28.6MB/s]
+
+  0%|                                              | 0.00/34.2M [00:00&lt;?, ?B/s]
+100%|█████████████████████████████████████| 34.2M/34.2M [00:00&lt;00:00, 98.2GB/s]
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py:1063: InsecureRequestWarning: Unverified HTTPS request is being made to host &#39;lampx.tugraz.at&#39;. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/1.26.x/advanced-usage.html#ssl-warnings
+  warnings.warn(
+
+
+  0%|                                              | 0.00/18.6M [00:00&lt;?, ?B/s]
+
+  0%|                                     | 8.19k/18.6M [00:00&lt;03:47, 81.7kB/s]
+
+  0%|                                      | 32.8k/18.6M [00:00&lt;01:45, 176kB/s]
+
+  1%|▏                                     | 96.3k/18.6M [00:00&lt;00:48, 380kB/s]
+
+  1%|▍                                      | 209k/18.6M [00:00&lt;00:27, 665kB/s]
+
+  2%|▉                                     | 432k/18.6M [00:00&lt;00:14, 1.21MB/s]
+
+  5%|█▊                                    | 889k/18.6M [00:00&lt;00:07, 2.32MB/s]
+
+ 10%|███▌                                 | 1.80M/18.6M [00:00&lt;00:03, 4.48MB/s]
+
+ 19%|███████▏                             | 3.59M/18.6M [00:00&lt;00:01, 8.63MB/s]
+
+ 36%|█████████████▎                       | 6.72M/18.6M [00:00&lt;00:00, 15.5MB/s]
+
+ 51%|██████████████████▊                  | 9.47M/18.6M [00:01&lt;00:00, 14.9MB/s]
+
+ 68%|█████████████████████████            | 12.6M/18.6M [00:01&lt;00:00, 18.9MB/s]
+
+ 78%|████████████████████████████▉        | 14.5M/18.6M [00:01&lt;00:00, 18.6MB/s]
+
+ 91%|█████████████████████████████████▊   | 17.0M/18.6M [00:01&lt;00:00, 20.1MB/s]
+
+  0%|                                              | 0.00/18.6M [00:00&lt;?, ?B/s]
+100%|█████████████████████████████████████| 18.6M/18.6M [00:00&lt;00:00, 56.6GB/s]
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  120 events (all good), 3 – 7.5 s, baseline off, ~3.1 MB, data loaded,
+ &#39;left_hand&#39;: 60
+ &#39;right_hand&#39;: 60&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  120 events (all good), 3 – 7.5 s, baseline off, ~3.1 MB, data loaded,
+ &#39;left_hand&#39;: 60
+ &#39;right_hand&#39;: 60&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  160 events (all good), 3 – 7.5 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 80
+ &#39;right_hand&#39;: 80&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  160 events (all good), 3 – 7.5 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 80
+ &#39;right_hand&#39;: 80&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  160 events (all good), 3 – 7.5 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 80
+ &#39;right_hand&#39;: 80&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4911        0.9198       0.5417        0.7580  0.7984
+      2       0.5335        0.8484       0.5500        0.7427  0.7911
+      3       0.5156        0.8522       0.6167        0.7149  0.7843
+      4       0.5692        0.8072       0.6250        0.7093  0.7581
+      5       0.5759        0.7943       0.6167        0.7069  0.7789
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4754        0.9905       0.4583        0.9086  0.7820
+      2       0.4911        0.9289       0.5000        0.7897  0.7523
+      3       0.5268        0.8763       0.5083        0.7658  0.7879
+      4       0.5335        0.8525       0.5500        0.7437  0.7860
+      5       0.5804        0.8011       0.5417        0.7215  0.7696
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5536        0.8432       0.5000        1.3623  0.7531
+      2       0.5692        0.8084       0.5268        1.1163  0.7841
+      3       0.6094        0.7869       0.5089        0.8575  0.7872
+      4       0.5759        0.7539       0.5625        0.7571  0.7689
+      5       0.5826        0.7542       0.5714        0.7074  0.7753
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5022        0.9088       0.4821        0.8526  0.7872
+      2       0.4933        0.9248       0.4911        0.7771  0.7823
+      3       0.5737        0.8040       0.5714        0.7347  0.7467
+      4       0.5335        0.8553       0.6071        0.7003  0.7859
+      5       0.6049        0.7523       0.6429        0.6727  0.7762
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4598        1.0353       0.5893        0.7552  0.7847
+      2       0.5000        0.9363       0.5893        0.7286  0.7498
+      3       0.5424        0.8981       0.6339        0.6948  0.7848
+      4       0.5246        0.8320       0.6339        0.6707  0.7841
+      5       0.5625        0.7917       0.6429        0.6533  0.7478
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5424        0.9867       0.5583        0.6922  1.0946
+      2       0.4955        1.0346       0.5000        0.6938  1.0632
+      3       0.5446        0.8827       0.5250        0.6964  1.0582
+Stopping since valid_loss has not improved in the last 3 epochs.
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4576        1.0006       0.5000        0.6953  1.0754
+      2       0.5067        0.9856       0.5083        0.6996  1.0535
+      3       0.4844        1.0049       0.5000        0.7048  1.0601
+Stopping since valid_loss has not improved in the last 3 epochs.
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4598        1.0402       0.4821        0.6994  1.0699
+      2       0.5156        0.9248       0.4911        0.6994  1.0734
+      3       0.4509        1.0712       0.4911        0.6984  1.0724
+      4       0.4888        0.9458       0.4911        0.6977  1.0688
+      5       0.4821        0.9688       0.4911        0.6974  1.0725
+      6       0.5045        0.9818       0.5000        0.6957  1.0667
+      7       0.5580        0.8827       0.5000        0.6941  1.0617
+      8       0.5223        0.8766       0.5000        0.6922  1.0819
+      9       0.5625        0.8447       0.5089        0.6898  1.0759
+     10       0.5424        0.9025       0.5089        0.6871  1.0553
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4955        0.9524       0.4821        0.6993  1.0571
+      2       0.4643        0.9694       0.4821        0.6989  1.0749
+      3       0.4866        1.0000       0.4643        0.6984  1.0631
+      4       0.5402        0.9495       0.4643        0.6979  1.0615
+      5       0.5246        0.8659       0.4643        0.6974  1.0658
+      6       0.4821        0.9351       0.4732        0.6967  1.0744
+      7       0.4576        0.9788       0.4732        0.6960  1.0708
+      8       0.4732        1.0056       0.4911        0.6949  1.0649
+      9       0.4933        0.9317       0.5089        0.6936  1.0636
+     10       0.4732        0.9154       0.5000        0.6925  1.0834
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4888        1.0628       0.4911        0.6977  1.0813
+      2       0.5223        0.9776       0.4911        0.6982  1.0727
+      3       0.5357        1.0137       0.5179        0.6989  1.0625
+Stopping since valid_loss has not improved in the last 3 epochs.
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5290        0.7207       0.5417        0.6931  0.1953
+      2       0.5446        0.7147       0.5250        0.6931  0.1863
+      3       0.4531        0.7360       0.5167        0.6931  0.1856
+Stopping since valid_loss has not improved in the last 3 epochs.
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5156        0.7116       0.5167        0.6937  0.1878
+      2       0.5134        0.7176       0.5083        0.6937  0.1859
+      3       0.5112        0.7126       0.5167        0.6938  0.1857
+Stopping since valid_loss has not improved in the last 3 epochs.
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4978        0.7359       0.5268        0.6926  0.1881
+      2       0.4978        0.7277       0.5536        0.6925  0.1863
+      3       0.5312        0.7161       0.5536        0.6924  0.1850
+      4       0.5201        0.7045       0.5268        0.6923  0.1868
+      5       0.5469        0.6927       0.5357        0.6922  0.2164
+      6       0.5357        0.7021       0.5536        0.6921  0.1858
+      7       0.5379        0.6916       0.5714        0.6919  0.1855
+      8       0.5402        0.6998       0.5357        0.6918  0.1871
+      9       0.5290        0.6924       0.5446        0.6916  0.1865
+     10       0.5603        0.6869       0.5536        0.6914  0.1874
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5179        0.7183       0.5179        0.6927  0.1911
+      2       0.5045        0.7105       0.5179        0.6926  0.1870
+      3       0.5469        0.6960       0.5179        0.6925  0.1870
+      4       0.4888        0.7316       0.5179        0.6924  0.2269
+      5       0.4888        0.7260       0.5625        0.6923  0.1862
+      6       0.5223        0.7085       0.5446        0.6922  0.1876
+      7       0.5156        0.7143       0.5536        0.6921  0.1896
+      8       0.5335        0.7034       0.5625        0.6919  0.1894
+      9       0.5246        0.7023       0.5625        0.6918  0.1866
+     10       0.5491        0.6955       0.5625        0.6916  0.2172
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5000        0.7135       0.5179        0.6928  0.1866
+      2       0.5134        0.7088       0.5179        0.6927  0.1856
+      3       0.4844        0.7184       0.5268        0.6926  0.2023
+      4       0.5312        0.7052       0.5268        0.6925  0.2095
+      5       0.5357        0.6937       0.4911        0.6924  0.1874
+      6       0.5558        0.6945       0.5089        0.6923  0.1853
+      7       0.5290        0.6924       0.5000        0.6922  0.1849
+      8       0.5647        0.6828       0.5000        0.6921  0.1876
+      9       0.5603        0.6929       0.5089        0.6919  0.2262
+     10       0.5446        0.6868       0.5089        0.6918  0.1851
+
+BNCI2014-004-CrossSession:  50%|#####     | 1/2 [01:16&lt;01:16, 76.79s/it]/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py:1063: InsecureRequestWarning: Unverified HTTPS request is being made to host &#39;lampx.tugraz.at&#39;. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/1.26.x/advanced-usage.html#ssl-warnings
+  warnings.warn(
+
+
+  0%|                                              | 0.00/33.1M [00:00&lt;?, ?B/s]
+
+  0%|                                      | 31.7k/33.1M [00:00&lt;01:44, 317kB/s]
+
+  0%|                                      | 63.5k/33.1M [00:00&lt;01:43, 317kB/s]
+
+  0%|                                       | 105k/33.1M [00:00&lt;01:30, 364kB/s]
+
+  1%|▏                                      | 209k/33.1M [00:00&lt;00:52, 628kB/s]
+
+  1%|▍                                     | 432k/33.1M [00:00&lt;00:27, 1.21MB/s]
+
+  3%|█                                     | 889k/33.1M [00:00&lt;00:13, 2.35MB/s]
+
+  5%|██                                   | 1.80M/33.1M [00:00&lt;00:06, 4.55MB/s]
+
+ 11%|████                                 | 3.61M/33.1M [00:00&lt;00:03, 8.85MB/s]
+
+ 20%|███████▍                             | 6.66M/33.1M [00:00&lt;00:01, 15.6MB/s]
+
+ 28%|██████████▌                          | 9.41M/33.1M [00:01&lt;00:01, 19.2MB/s]
+
+ 36%|█████████████▎                       | 11.9M/33.1M [00:01&lt;00:01, 21.0MB/s]
+
+ 45%|████████████████▌                    | 14.8M/33.1M [00:01&lt;00:00, 23.5MB/s]
+
+ 54%|███████████████████▉                 | 17.8M/33.1M [00:01&lt;00:00, 25.4MB/s]
+
+ 62%|██████████████████████▉              | 20.5M/33.1M [00:01&lt;00:00, 25.7MB/s]
+
+ 70%|█████████████████████████▉           | 23.2M/33.1M [00:01&lt;00:00, 26.2MB/s]
+
+ 78%|████████████████████████████▉        | 25.8M/33.1M [00:01&lt;00:00, 23.5MB/s]
+
+ 86%|███████████████████████████████▉     | 28.5M/33.1M [00:01&lt;00:00, 24.4MB/s]
+
+ 94%|██████████████████████████████████▋  | 31.0M/33.1M [00:01&lt;00:00, 24.2MB/s]
+
+  0%|                                              | 0.00/33.1M [00:00&lt;?, ?B/s]
+100%|█████████████████████████████████████| 33.1M/33.1M [00:00&lt;00:00, 93.4GB/s]
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py:1063: InsecureRequestWarning: Unverified HTTPS request is being made to host &#39;lampx.tugraz.at&#39;. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/1.26.x/advanced-usage.html#ssl-warnings
+  warnings.warn(
+
+
+  0%|                                              | 0.00/16.5M [00:00&lt;?, ?B/s]
+
+  0%|                                     | 8.19k/16.5M [00:00&lt;03:24, 80.7kB/s]
+
+  0%|                                      | 32.8k/16.5M [00:00&lt;01:34, 175kB/s]
+
+  1%|▏                                     | 96.3k/16.5M [00:00&lt;00:43, 379kB/s]
+
+  1%|▍                                      | 209k/16.5M [00:00&lt;00:24, 662kB/s]
+
+  3%|▉                                     | 432k/16.5M [00:00&lt;00:13, 1.21MB/s]
+
+  5%|██                                    | 889k/16.5M [00:00&lt;00:06, 2.31MB/s]
+
+ 11%|████                                 | 1.80M/16.5M [00:00&lt;00:03, 4.45MB/s]
+
+ 22%|████████                             | 3.62M/16.5M [00:00&lt;00:01, 8.69MB/s]
+
+ 39%|██████████████▎                      | 6.39M/16.5M [00:00&lt;00:00, 14.4MB/s]
+
+ 53%|███████████████████▌                 | 8.72M/16.5M [00:01&lt;00:00, 16.9MB/s]
+
+ 69%|█████████████████████████▍           | 11.4M/16.5M [00:01&lt;00:00, 19.7MB/s]
+
+ 84%|██████████████████████████████▉      | 13.8M/16.5M [00:01&lt;00:00, 20.9MB/s]
+
+ 99%|████████████████████████████████████▊| 16.4M/16.5M [00:01&lt;00:00, 22.3MB/s]
+
+  0%|                                              | 0.00/16.5M [00:00&lt;?, ?B/s]
+100%|█████████████████████████████████████| 16.5M/16.5M [00:00&lt;00:00, 77.2GB/s]
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  120 events (all good), 3 – 7.5 s, baseline off, ~3.1 MB, data loaded,
+ &#39;left_hand&#39;: 60
+ &#39;right_hand&#39;: 60&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  120 events (all good), 3 – 7.5 s, baseline off, ~3.1 MB, data loaded,
+ &#39;left_hand&#39;: 60
+ &#39;right_hand&#39;: 60&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  160 events (all good), 3 – 7.5 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 80
+ &#39;right_hand&#39;: 80&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  120 events (all good), 3 – 7.5 s, baseline off, ~3.1 MB, data loaded,
+ &#39;left_hand&#39;: 60
+ &#39;right_hand&#39;: 60&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/moabb/datasets/preprocessing.py:279: UserWarning: warnEpochs &lt;Epochs |  160 events (all good), 3 – 7.5 s, baseline off, ~4.1 MB, data loaded,
+ &#39;left_hand&#39;: 80
+ &#39;right_hand&#39;: 80&gt;
+  warn(f&quot;warnEpochs {epochs}&quot;)
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5112        0.8991       0.5000        1.1139  0.7807
+      2       0.5201        0.8612       0.5714        0.7185  0.7862
+      3       0.4978        0.8468       0.5268        0.7583  0.7521
+      4       0.5402        0.8091       0.5804        0.7336  0.7783
+      5       0.5558        0.7792       0.5536        0.7054  0.7851
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5022        0.9263       0.5357        0.9504  0.7764
+      2       0.5022        0.8649       0.5000        1.1393  0.7478
+      3       0.5246        0.8730       0.5000        1.0159  0.7799
+      4       0.5112        0.8581       0.5536        0.8077  0.7812
+      5       0.5379        0.8181       0.5714        0.7339  0.7471
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5130        0.9061       0.5481        0.7382  0.6444
+      2       0.5104        0.8901       0.5673        0.7483  0.6782
+      3       0.5104        0.8577       0.5962        0.7301  0.6423
+      4       0.4818        0.9048       0.5673        0.7031  0.6831
+      5       0.5495        0.8333       0.5673        0.6862  0.6749
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4911        0.8951       0.4643        0.7979  0.7503
+      2       0.4978        0.8837       0.4286        0.7913  0.7836
+      3       0.4955        0.8766       0.5179        0.7746  0.7875
+      4       0.5089        0.8193       0.5268        0.7727  0.7736
+      5       0.5335        0.8036       0.5179        0.7700  0.7784
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5026        0.8946       0.5192        1.0626  0.6815
+      2       0.5052        0.8812       0.5192        0.8487  0.6728
+      3       0.5365        0.8328       0.5192        0.7854  0.6436
+      4       0.5208        0.8306       0.5192        0.7677  0.6744
+      5       0.5417        0.7932       0.5288        0.7632  0.6476
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4933        0.9878       0.4375        0.6981  1.0786
+      2       0.5357        0.8906       0.4554        0.6986  1.0567
+      3       0.5156        0.9547       0.4286        0.6999  1.0713
+Stopping since valid_loss has not improved in the last 3 epochs.
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5112        0.9152       0.5000        0.7137  1.0627
+      2       0.4933        0.9756       0.5000        0.7146  1.0756
+      3       0.5045        0.9241       0.5000        0.7149  1.0573
+Stopping since valid_loss has not improved in the last 3 epochs.
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5365        0.9148       0.5865        0.6862  0.9205
+      2       0.5339        0.8419       0.5673        0.6859  0.9212
+      3       0.4948        0.9426       0.5288        0.6863  0.9247
+      4       0.4896        0.8861       0.5192        0.6876  0.8932
+Stopping since valid_loss has not improved in the last 3 epochs.
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5179        0.9471       0.4911        0.6982  1.0688
+      2       0.5201        0.9466       0.4911        0.6963  1.0703
+      3       0.4821        1.0345       0.4732        0.6953  1.0650
+      4       0.4710        1.0238       0.5625        0.6950  1.0522
+      5       0.5022        0.9675       0.5536        0.6950  1.0636
+      6       0.5134        0.9357       0.5268        0.6954  1.0605
+Stopping since valid_loss has not improved in the last 3 epochs.
+/home/runner/work/moabb/moabb/.venv/lib/python3.9/site-packages/braindecode/models/base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn(&quot;LogSoftmax final layer will be removed! &quot; +
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5052        0.8814       0.5577        0.6913  0.9240
+      2       0.5052        0.9007       0.5673        0.6912  0.8964
+      3       0.5260        0.9192       0.5288        0.6911  0.9237
+      4       0.5312        0.8551       0.5192        0.6910  0.9149
+      5       0.5104        0.8982       0.5769        0.6909  0.9275
+      6       0.4870        0.9420       0.5673        0.6907  0.9111
+      7       0.5312        0.8717       0.5481        0.6906  0.9009
+      8       0.5130        0.8769       0.5096        0.6906  0.9165
+      9       0.5208        0.9278       0.4904        0.6906  0.9255
+Stopping since valid_loss has not improved in the last 3 epochs.
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4933        0.7532       0.4732        0.6931  0.2080
+      2       0.4598        0.7549       0.4643        0.6931  0.2032
+      3       0.4933        0.7354       0.4821        0.6931  0.1835
+Stopping since valid_loss has not improved in the last 3 epochs.
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5179        0.7102       0.4464        0.6932  0.2249
+      2       0.5000        0.7165       0.5089        0.6932  0.1869
+      3       0.4576        0.7379       0.5089        0.6932  0.1867
+Stopping since valid_loss has not improved in the last 3 epochs.
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5182        0.7114       0.5000        0.6930  0.2023
+      2       0.5286        0.7123       0.5000        0.6930  0.1616
+      3       0.5182        0.7063       0.5000        0.6929  0.1604
+      4       0.4661        0.7388       0.5096        0.6929  0.1597
+      5       0.5260        0.7046       0.5096        0.6928  0.1602
+      6       0.5469        0.6918       0.5096        0.6928  0.1597
+      7       0.5208        0.7206       0.5096        0.6927  0.1598
+      8       0.4974        0.7086       0.5192        0.6927  0.1914
+      9       0.5365        0.7119       0.5192        0.6926  0.1594
+     10       0.5599        0.7050       0.5192        0.6925  0.1593
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.5290        0.7265       0.4643        0.6931  0.1862
+      2       0.5246        0.7227       0.4554        0.6931  0.2181
+      3       0.4978        0.7255       0.4911        0.6931  0.1852
+Stopping since valid_loss has not improved in the last 3 epochs.
+  epoch    train_acc    train_loss    valid_acc    valid_loss     dur
+-------  -----------  ------------  -----------  ------------  ------
+      1       0.4609        0.7586       0.5577        0.6926  0.1628
+      2       0.5234        0.7459       0.5769        0.6926  0.1989
+      3       0.5078        0.7173       0.5673        0.6926  0.1602
+      4       0.4870        0.7384       0.5288        0.6925  0.1593
+      5       0.4766        0.7319       0.5096        0.6925  0.1596
+      6       0.5260        0.7124       0.4712        0.6924  0.1596
+      7       0.4948        0.7197       0.4712        0.6924  0.1607
+      8       0.4661        0.7229       0.4904        0.6923  0.1701
+      9       0.5026        0.7160       0.4904        0.6923  0.1838
+     10       0.5234        0.7116       0.4808        0.6922  0.1602
+
+BNCI2014-004-CrossSession: 100%|##########| 2/2 [02:21&lt;00:00, 69.62s/it]
+BNCI2014-004-CrossSession: 100%|##########| 2/2 [02:21&lt;00:00, 70.70s/it]
+        dataset    evaluation                       pipeline  avg score
+0  BNCI2014-001  CrossSession  braindecode_EEGNetv4_resample   0.517216
+1  BNCI2014-001  CrossSession    braindecode_ShallowFBCSPNet   0.510079
+2  BNCI2014-001  CrossSession       braindecode_EEGInception   0.509549
+3  BNCI2014-004  CrossSession  braindecode_EEGNetv4_resample   0.513668
+4  BNCI2014-004  CrossSession    braindecode_ShallowFBCSPNet   0.510859
+5  BNCI2014-004  CrossSession       braindecode_EEGInception   0.557559
+</pre></div>
+</div>
+<p>The deep learning architectures implemented in MOABB using Braindecode are:</p>
+<ul class="simple">
+<li><p>Shallow Convolutional Network <a class="footnote-reference brackets" href="#id5" id="id1">1</a></p></li>
+<li><p>Deep Convolutional Network <a class="footnote-reference brackets" href="#id5" id="id2">1</a></p></li>
+<li><p>EEGNetv4 <a class="footnote-reference brackets" href="#id6" id="id3">2</a></p></li>
+<li><p>EEGInception <a class="footnote-reference brackets" href="#id7" id="id4">3</a></p></li>
+</ul>
+<p>Benchmark prints a summary of the results. Detailed results are saved in a
+pandas dataframe, and can be used to generate figures. The analysis &amp; figures
+are saved in the <code class="docutils literal notranslate"><span class="pre">benchmark</span></code> folder.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><a href="../generated/moabb.analysis.plotting.score_plot.html#moabb.analysis.plotting.score_plot" title="moabb.analysis.plotting.score_plot" class="sphx-glr-backref-module-moabb-analysis-plotting sphx-glr-backref-type-py-function"><span class="n">score_plot</span></a><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<img src="../_images/sphx_glr_plot_benchmark_braindecode_001.png" srcset="../_images/sphx_glr_plot_benchmark_braindecode_001.png" alt="Scores per dataset and algorithm" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/moabb/moabb/moabb/analysis/plotting.py:70: UserWarning: The palette list has more values (6) than needed (3), which may not be intended.
+  sea.stripplot(
+</pre></div>
+</div>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
+<dl class="footnote brackets">
+<dt class="label" id="id5"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>)</span></dt>
+<dd><p>Schirrmeister, R. T., Springenberg, J. T., Fiederer, L. D. J.,
+Glasstetter, M., Eggensperger, K., Tangermann, M., … &amp; Ball, T. (2017).
+<a class="reference external" href="https://doi.org/10.1002/hbm.23730">Deep learning with convolutional neural networks for EEG decoding and
+visualization</a>.
+Human brain mapping, 38(11), 5391-5420.</p>
+</dd>
+<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>Lawhern, V. J., Solon, A. J., Waytowich, N. R., Gordon, S. M.,
+Hung, C. P., &amp; Lance, B. J. (2018). <a class="reference external" href="https://doi.org/10.1088/1741-2552/aace8c">EEGNet: a compact convolutional neural
+network for EEG-based brain-computer interfaces.</a>
+Journal of neural engineering, 15(5), 056013.</p>
+</dd>
+<dt class="label" id="id7"><span class="brackets"><a class="fn-backref" href="#id4">3</a></span></dt>
+<dd><p>Santamaria-Vazquez, E., Martinez-Cagigal, V., Vaquerizo-Villar,
+F., &amp; Hornero, R. (2020). <a class="reference external" href="https://doi.org/10.1109/TNSRE.2020.3048106">EEG-inception: A novel deep convolutional neural network
+for assistive ERP-based brain-computer interfaces.</a>
+IEEE Transactions on Neural Systems and Rehabilitation Engineering</p>
+</dd>
+</dl>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 3 minutes  5.595 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  727 MB</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-benchmark-braindecode-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/284aff1e2748c45a1efdc5d7071c4a77/plot_benchmark_braindecode.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_benchmark_braindecode.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/7f676ecf06fb47e9238e23dd03876176/plot_benchmark_braindecode.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_benchmark_braindecode.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="plot_benchmark_DL.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Benchmarking on MOABB with Tensorflow deep net architectures</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plot_benchmark_grid_search.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Benchmarking with MOABB with Grid Search</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-benchmark">Running the benchmark</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2018-2024 MOABB contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
